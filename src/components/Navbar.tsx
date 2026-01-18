@@ -45,14 +45,16 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/cart" className="p-2 text-chocolate/70 hover:text-terracotta transition-colors relative">
-              <ShoppingCart size={20} />
-              {mounted && getTotalItems() > 0 && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-terracotta text-white text-[8px] flex items-center justify-center rounded-full font-bold animate-in zoom-in duration-300">
-                  {getTotalItems()}
-                </span>
-              )}
-            </Link>
+            {mounted && user && (
+              <Link href="/cart" className="p-2 text-chocolate/70 hover:text-terracotta transition-colors relative group">
+                <ShoppingCart size={20} />
+                {getTotalItems() > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-terracotta text-white text-[10px] flex items-center justify-center rounded-full font-black shadow-lg animate-pulse">
+                    {getTotalItems()}
+                  </span>
+                )}
+              </Link>
+            )}
             <div className="hidden sm:flex items-center gap-1">
               {mounted && user ? (
                 <div className="flex items-center gap-4">

@@ -123,9 +123,17 @@ export default function Home() {
       </section>
 
       <section className="container mx-auto px-4">
-        <div className="flex items-center gap-4 mb-12">
-          <div className="w-12 h-1.5 bg-terracotta rounded-full"></div>
-          <h2 className="text-3xl font-black text-chocolate uppercase tracking-[0.1em]">Meilleures Ventes</h2>
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-1.5 bg-terracotta rounded-full"></div>
+            <h2 className="text-3xl font-black text-chocolate uppercase tracking-[0.1em]">Meilleures Ventes</h2>
+          </div>
+          <Link 
+            href="/public/catalog" 
+            className="text-terracotta font-black text-sm uppercase tracking-widest hover:underline flex items-center gap-2"
+          >
+            Voir plus →
+          </Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {isLoading ? (
@@ -133,43 +141,36 @@ export default function Home() {
                <div key={i} className="h-96 rounded-[40px] bg-sand/10 animate-pulse border border-sand/20" />
              ))
           ) : products.map((p) => (
-            <div key={p.id} className="group flex flex-col bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-sand">
+            <Link 
+              key={p.id} 
+              href={`/public/product/${p.id}`}
+              className="group flex flex-col bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-sand cursor-pointer"
+            >
               <div className="relative h-72 w-full bg-sand/5 overflow-hidden">
                 <Image src={p.imageUrl || '/images/placeholder.png'} alt={p.name} fill className="object-cover p-0 transition-transform duration-700 group-hover:scale-110" />
-                <button className="absolute top-6 right-6 p-4 bg-white/80 backdrop-blur-md rounded-full text-chocolate/20 hover:text-red-500 hover:scale-110 transition-all shadow-lg border border-white/50">
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // TODO: Toggle favorite
+                  }}
+                  className="absolute top-6 right-6 p-4 bg-white/80 backdrop-blur-md rounded-full text-chocolate/20 hover:text-red-500 hover:scale-110 transition-all shadow-lg border border-white/50"
+                >
                   <Heart size={20} />
                 </button>
               </div>
               <div className="p-8 flex flex-col gap-4">
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-terracotta animate-pulse"></div>
-                   <Link 
-                     href={`/public/supplier/${p.supplier.id}`}
-                     className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em] hover:underline"
-                   >
+                   <span className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em]">
                     {p.supplier.shopName}
-                  </Link>
+                  </span>
                 </div>
                 <h4 className="font-bold text-chocolate text-xl tracking-tight leading-tight line-clamp-2">{p.name}</h4>
-                <div className="flex items-center justify-between mt-6 pt-6 border-t border-sand">
+                <div className="mt-auto pt-6 border-t border-sand">
                   <span className="text-xl font-black text-chocolate tracking-tighter">{p.price.toLocaleString()} CFA</span>
-                  <button 
-                    onClick={() => addItem({
-                      id: p.id,
-                      name: p.name,
-                      price: p.price,
-                      image: p.imageUrl,
-                      quantity: 1,
-                      supplierId: p.supplier.id,
-                      supplierName: p.supplier.shopName
-                    })}
-                    className="p-4 bg-terracotta text-white rounded-3xl hover:bg-chocolate transition-all transform active:scale-90 shadow-xl shadow-terracotta/20"
-                  >
-                    <ShoppingCart size={22} />
-                  </button>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

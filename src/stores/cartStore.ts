@@ -6,9 +6,12 @@ export interface CartItem {
   name: string;
   price: number; // en CFA
   image: string;
+  imageUrl?: string; // Optional alias for compatibility
   quantity: number;
   supplierId: number;
   supplierName: string;
+  selectedColor?: string; // Couleur sélectionnée par l'utilisateur
+  selectedSize?: string; // Taille sélectionnée par l'utilisateur (ex: "M", "L", "10m")
 }
 
 export interface CheckoutInfo {
@@ -47,15 +50,21 @@ export const useCartStore = create<CartState>()(
       },
 
       addItem: (item) => set((state) => {
-        const existingItem = state.items.find((i) => i.id === item.id);
+        // Assurer que l'ID est un nombre
+        const normalizedItem = {
+          ...item,
+          id: Number(item.id),
+          supplierId: Number(item.supplierId),
+        };
+        const existingItem = state.items.find((i) => i.id === normalizedItem.id);
         if (existingItem) {
           return {
             items: state.items.map((i) => 
-              i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i
+              i.id === normalizedItem.id ? { ...i, quantity: i.quantity + normalizedItem.quantity } : i
             ),
           };
         }
-        return { items: [...state.items, item] };
+        return { items: [...state.items, normalizedItem] };
       }),
 
       removeItem: (productId) => set((state) => ({

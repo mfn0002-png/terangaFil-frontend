@@ -184,20 +184,12 @@ export default function CatalogPage() {
                             <h3 className="font-bold text-chocolate text-lg leading-tight mb-4 line-clamp-2">{p.name}</h3>
                             <div className="flex items-end justify-between">
                                <span className="text-lg font-black text-chocolate tracking-tighter">{p.price.toLocaleString()} <span className="text-xs font-bold text-chocolate/40">CFA</span></span>
-                               <button 
-                                  onClick={() => addItem({
-                                    id: p.id,
-                                    name: p.name,
-                                    price: p.price,
-                                    image: p.imageUrl,
-                                    quantity: 1,
-                                    supplierId: p.supplier.id,
-                                    supplierName: p.supplier.shopName
-                                  })}
-                                  className="p-3 bg-terracotta text-white rounded-2xl hover:bg-chocolate transition-all shadow-lg shadow-terracotta/20 active:scale-90"
+                               <Link 
+                                  href={`/public/product/${p.id}`}
+                                  className="px-4 py-3 bg-terracotta text-white rounded-2xl hover:bg-chocolate transition-all shadow-lg shadow-terracotta/20 text-xs font-black uppercase tracking-widest"
                                >
-                                  <ShoppingCart size={18} />
-                               </button>
+                                  Détails
+                               </Link>
                             </div>
                          </div>
                       </div>

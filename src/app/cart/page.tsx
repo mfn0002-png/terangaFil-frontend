@@ -15,9 +15,15 @@ import {
 import { useCartStore, CartItem } from '@/stores/cartStore';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getTotalPrice, getItemsBySupplier } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotalPrice, getItemsBySupplier, clearCart } = useCartStore();
   const groupedItems = getItemsBySupplier();
   const totalPrice = getTotalPrice();
+
+  const handleClearCart = () => {
+    if (window.confirm('Êtes-vous sûr de vouloir vider complètement votre panier ?')) {
+      clearCart();
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -40,9 +46,18 @@ export default function CartPage() {
   return (
     <div className="bg-sand/10 min-h-screen pb-32">
       <div className="container mx-auto px-4 py-16">
-        <div className="flex items-center gap-4 mb-12">
-          <div className="w-12 h-1.5 bg-terracotta rounded-full"></div>
-          <h1 className="text-4xl font-black text-chocolate uppercase tracking-[0.1em]">Mon Panier</h1>
+        <div className="flex items-center justify-between mb-12">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-1.5 bg-terracotta rounded-full"></div>
+            <h1 className="text-4xl font-black text-chocolate uppercase tracking-[0.1em]">Mon Panier</h1>
+          </div>
+          <button
+            onClick={handleClearCart}
+            className="flex items-center gap-2 px-6 py-3 bg-red-100 text-red-600 rounded-full font-black text-xs uppercase tracking-widest hover:bg-red-200 transition-all active:scale-95"
+          >
+            <Trash2 size={16} />
+            Vider le panier
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
@@ -87,6 +102,18 @@ export default function CartPage() {
                       <div className="flex-1 space-y-2 text-center sm:text-left">
                         <h4 className="text-xl font-bold text-chocolate tracking-tight italic">{item.name}</h4>
                         <p className="text-xs font-bold text-chocolate/30 uppercase tracking-widest">{item.supplierName}</p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {item.selectedColor && (
+                            <span className="inline-block px-3 py-1 bg-terracotta/10 text-terracotta text-[10px] font-bold rounded-full uppercase tracking-widest">
+                              Couleur: {item.selectedColor}
+                            </span>
+                          )}
+                          {item.selectedSize && (
+                            <span className="inline-block px-3 py-1 bg-leaf/10 text-leaf text-[10px] font-bold rounded-full uppercase tracking-widest">
+                              Taille: {item.selectedSize}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex flex-col items-center gap-4">

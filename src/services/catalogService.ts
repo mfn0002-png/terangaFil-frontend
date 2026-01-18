@@ -4,8 +4,17 @@ export interface Product {
   id: number;
   name: string;
   price: number;
+  stock: number;
   imageUrl: string;
+  images: string[];
   category: string;
+  description: string;
+  material?: string;
+  weight?: string;
+  length?: string;
+  usage?: string;
+  colors: string[];
+  sizes?: string[]; // Tailles disponibles (ex: ["S", "M", "L", "XL"] ou ["10m", "20m"])
   isSpotlight: boolean;
   supplier: {
     id: number;
@@ -55,6 +64,11 @@ export const catalogService = {
 
   async getSupplierById(id: number | string): Promise<Supplier> {
     const response = await api.get(`/catalog/suppliers/${id}`);
+    return response.data;
+  },
+
+  async getProductById(id: number | string): Promise<Product> {
+    const response = await api.get(`/catalog/products/${id}`);
     return response.data;
   }
 };

@@ -12,17 +12,20 @@ import {
   LogOut, 
   Loader2, 
   Camera, 
-  CheckCircle2 
+  CheckCircle2,
+  Heart 
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
-import api from '@/lib/api';
+import authService from '@/services/authService';
+import { favoriteService, Favorite } from '@/services/favoriteService';
 
 export default function ProfilePage() {
   const { user, token, logout, setAuth } = useAuthStore();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'PROFILE' | 'SECURITY' | 'NOTIFICATIONS' | 'SHOP'>('PROFILE');
+  const [activeTab, setActiveTab] = useState<'PROFILE' | 'SECURITY' | 'NOTIFICATIONS' | 'SHOP' | 'FAVORITES'>('PROFILE');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -39,19 +42,31 @@ export default function ProfilePage() {
     // Fetch latest user data
     const fetchUser = async () => {
       try {
-        const res = await api.get('/users/me');
+        const userData = await authService.getMe();
         setFormData({
-          name: res.data.name,
-          email: res.data.email || '',
-          phoneNumber: res.data.phoneNumber || '',
+          name: userData.name,
+          email: userData.email || '',
+          phoneNumber: userData.phoneNumber || '',
         });
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
     };
 
+    const fetchFavorites = async () => {
+      if (user?.role === 'CLIENT') {
+        try {
+          const data = await favoriteService.getFavorites();
+          setFavorites(data);
+        } catch (error) {
+          console.error('Error fetching favorites:', error);
+        }
+      }
+    };
+
     fetchUser();
-  }, [token, router]);
+    fetchFavorites();
+  }, [token, router, user]);
 
   const handleLogout = () => {
     logout();
@@ -61,10 +76,10 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await api.put('/users/me', formData);
+      const updatedUser = await authService.updateMe(formData);
       // Update local store with new info (keeping token and id/role same)
       if (user) {
-        setAuth({ ...user, ...res.data }, token!);
+        setAuth({ ...user, ...updatedUser }, token!);
       }
       alert('Profil mis à jour avec succès !');
     } catch (error) {
@@ -113,8 +128,8 @@ export default function ProfilePage() {
                   { id: 'PROFILE', label: 'Mon Profil', icon: User },
                   { id: 'SECURITY', label: 'Sécurité', icon: Shield },
                   { id: 'NOTIFICATIONS', label: 'Notifications', icon: Bell },
-                  ...(user.role === 'client' ? [{ id: 'ADDRESS', label: 'Adresses', icon: MapPin }] : []),
-                  ...(user.role !== 'client' ? [{ id: 'SHOP', label: 'Ma Boutique', icon: Store }] : []),
+                  ...(user.role === 'CLIENT' ? [{ id: 'FAVORITES', label: 'Mes Favoris', icon: Heart }] : []),
+                  ...(user.role === 'SUPPLIER' ? [{ id: 'SHOP', label: 'Ma Boutique', icon: Store }] : []),
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -234,6 +249,51 @@ export default function ProfilePage() {
                    </button>
                 </div>
               )}
+
+              {activeTab === 'FAVORITES' && (
+                <div className="space-y-8">
+                   <h2 className="text-2xl font-black text-chocolate italic">Mes Favoris</h2>
+                   {favorites.length === 0 ? (
+                     <div className="text-center py-20">
+                        <Heart size={64} className="mx-auto text-chocolate/10 mb-4" />
+                        <p className="text-chocolate/40 font-bold">Vous n'avez pas encore de favoris.</p>
+                        <button 
+                          onClick={() => router.push('/public/catalog')}
+                          className="mt-6 px-6 py-3 bg-terracotta text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-chocolate transition-all"
+                        >
+                          Découvrir le catalogue
+                        </button>
+                     </div>
+                   ) : (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {favorites.map((fav) => (
+                          <div key={fav.id} className="bg-sand/20 rounded-[30px] p-4 hover:shadow-lg transition-all">
+                             <div className="relative aspect-square rounded-2xl overflow-hidden mb-4">
+                                <Image 
+                                  src={fav.product.imageUrl || '/images/placeholder.png'} 
+                                  alt={fav.product.name} 
+                                  fill 
+                                  className="object-cover" 
+                                />
+                             </div>
+                             <h3 className="font-bold text-chocolate mb-2">{fav.product.name}</h3>
+                             <p className="text-sm text-chocolate/60 font-bold mb-3">{fav.product.supplier.shopName}</p>
+                             <div className="flex items-center justify-between">
+                                <span className="text-lg font-black text-terracotta">{fav.product.price.toLocaleString()} CFA</span>
+                                <button 
+                                  onClick={() => router.push(`/public/product/${fav.product.id}`)}
+                                  className="px-4 py-2 bg-terracotta text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-chocolate transition-all"
+                                >
+                                  Voir
+                                </button>
+                             </div>
+                          </div>
+                        ))}
+                     </div>
+                   )}
+                </div>
+              )}
+
 
             </div>
           </main>

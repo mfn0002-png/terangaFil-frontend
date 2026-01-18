@@ -54,6 +54,16 @@ const authService = {
 
     return registerRes.data;
   },
+
+  getMe: async () => {
+    const res = await api.get('/users/me');
+    return res.data;
+  },
+
+  updateMe: async (data: { name?: string; email?: string; phoneNumber?: string }) => {
+    const res = await api.put('/users/me', data);
+    return res.data;
+  },
 };
 
 export default authService;

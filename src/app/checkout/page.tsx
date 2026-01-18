@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   CreditCard, 
   MapPin, 
@@ -11,17 +12,66 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import api from '@/lib/api';
 
 export default function CheckoutPage() {
-  const { items, getItemsBySupplier, getTotalPrice, checkoutInfo, setCheckoutInfo } = useCartStore();
+  const router = useRouter();
+  const { items, getItemsBySupplier, getTotalPrice, checkoutInfo, setCheckoutInfo, clearCart } = useCartStore();
   const groupedItems = getItemsBySupplier();
   
   const [activePayment, setActivePayment] = useState<'WAVE' | 'OM' | 'CARD'>('WAVE');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const shippingFeesPerSupplier = 1500; // Frais fixes par boutique pour l'exemple
   const totalVendors = Object.keys(groupedItems).length;
   const totalShipping = totalVendors * shippingFeesPerSupplier;
   const grandTotal = getTotalPrice() + totalShipping;
+
+  const handleSubmitOrder = async () => {
+    // Validation
+    if (!checkoutInfo.firstName || !checkoutInfo.lastName || !checkoutInfo.phoneNumber || !checkoutInfo.address) {
+      alert('Veuillez remplir tous les champs de livraison.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Préparer les données pour l'API backend
+      // Assurer que les productId sont des nombres
+      const orderData = {
+        items: items.map(item => ({
+          productId: Number(item.id),
+          quantity: Number(item.quantity),
+          selectedColor: item.selectedColor || null,
+          selectedSize: item.selectedSize || null,
+        })),
+        shippingZone: checkoutInfo.address,
+        paymentMethod: activePayment,
+        customerInfo: {
+          firstName: checkoutInfo.firstName,
+          lastName: checkoutInfo.lastName,
+          phoneNumber: checkoutInfo.phoneNumber,
+          address: checkoutInfo.address,
+        }
+      };
+
+      // Envoyer la commande au backend
+      const response = await api.post('/orders', orderData);
+
+      // Vider le panier
+      clearCart();
+
+      // Rediriger vers une page de confirmation
+      alert(`✅ Commande confirmée ! Numéro de commande : #${response.data.id}`);
+      router.push('/');
+    } catch (error: any) {
+      console.error('Erreur lors de la soumission de la commande:', error);
+      alert(error.response?.data?.message || 'Erreur lors de la création de la commande. Veuillez réessayer.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="bg-sand/10 min-h-screen pb-24 font-sans">
@@ -168,6 +218,9 @@ export default function CheckoutPage() {
                                   </div>
                                   <div className="flex-1 space-y-1">
                                      <h5 className="font-bold text-chocolate text-sm tracking-tight">{item.name}</h5>
+                                     {item.selectedColor && (
+                                       <p className="text-[10px] font-bold text-terracotta">Couleur: {item.selectedColor}</p>
+                                     )}
                                      <p className="text-[10px] font-bold text-chocolate/30">Qté: {item.quantity}</p>
                                      <p className="font-black text-chocolate text-xs tracking-tighter">{item.price.toLocaleString()} CFA</p>
                                   </div>
@@ -200,9 +253,13 @@ export default function CheckoutPage() {
                    </div>
                 </div>
 
-                <button className="w-full bg-terracotta text-white py-6 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-chocolate transition-all active:scale-95 shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-4 group">
-                  Confirmer la commande
-                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
+                <button 
+                  onClick={handleSubmitOrder}
+                  disabled={isSubmitting}
+                  className="w-full bg-terracotta text-white py-6 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-chocolate transition-all active:scale-95 shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? 'Traitement en cours...' : 'Confirmer la commande'}
+                  {!isSubmitting && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
                 </button>
 
                 <p className="text-center text-[8px] font-bold text-chocolate/20 uppercase tracking-widest leading-relaxed">En confirmant, vous acceptez nos conditions générales de vente et la politique de confidentialité.</p>
