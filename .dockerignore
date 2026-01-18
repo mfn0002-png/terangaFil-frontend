@@ -1,0 +1,10 @@
+node_modules
+.next
+dist
+.git
+.gitignore
+*.md
+docker-compose*.yml
+Dockerfile*
+.gitlab-ci.yml
+public/images # Si vous avez beaucoup d'images, mieux vaut les monter via volume ou les ignorer pour le build

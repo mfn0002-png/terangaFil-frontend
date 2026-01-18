@@ -1,26 +1,73 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Palette de base */
+  --terracotta: #c96a3b;
+  --sand: #f4efea;
+  --chocolate: #4a2e24;
+  --leaf: #5f7c65;
+  --gold: #d8b56a;
+
+  /* Couleurs sémantiques (Gestion dynamique) */
+  --primary: var(--terracotta);
+  --secondary: var(--leaf);
+  --accent: var(--gold);
+
+  --background: var(--sand);
+  --foreground: var(--chocolate);
+
+  --card: #ffffff;
+  --card-foreground: var(--chocolate);
+
+  --border: #e2e2e2;
+  --input: #ffffff;
+  --ring: var(--primary);
+
+  --radius: 0.75rem;
 }
 
-@theme inline {
+@theme {
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+
+  --color-terracotta: var(--terracotta);
+  --color-sand: var(--sand);
+  --color-chocolate: var(--chocolate);
+  --color-leaf: var(--leaf);
+  --color-gold: var(--gold);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-border: var(--border);
+
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    @apply antialiased;
+    font-feature-settings: "overline" 0, "smcp" 0, "onum" 0, "pnum" 0, "tnum" 0;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
 }
