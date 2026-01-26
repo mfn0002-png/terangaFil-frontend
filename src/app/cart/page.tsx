@@ -13,16 +13,25 @@ import {
   Store
 } from 'lucide-react';
 import { useCartStore, CartItem } from '@/stores/cartStore';
+import { useState } from 'react';
+import { Modal } from '@/components/shared/Modal';
+import { Button } from '@/components/shared/Button';
+import { toast } from '@/stores/useToastStore';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, getTotalPrice, getItemsBySupplier, clearCart } = useCartStore();
   const groupedItems = getItemsBySupplier();
   const totalPrice = getTotalPrice();
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const handleClearCart = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir vider complètement votre panier ?')) {
-      clearCart();
-    }
+    setShowClearModal(true);
+  };
+
+  const confirmClearCart = () => {
+    clearCart();
+    setShowClearModal(false);
+    toast.success('Panier vidé');
   };
 
   if (items.length === 0) {
@@ -113,27 +122,32 @@ export default function CartPage() {
                               Taille: {item.selectedSize}
                             </span>
                           )}
+                          {item.shippingZone && (
+                            <span className="inline-block px-3 py-1 bg-sand text-chocolate text-[10px] font-bold rounded-full uppercase tracking-widest">
+                              Zone: {item.shippingZone}
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       <div className="flex flex-col items-center gap-4">
                         <div className="flex items-center bg-sand/30 rounded-full p-2 border border-sand">
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedColor, item.selectedSize, item.shippingZone)}
                             className="w-10 h-10 flex items-center justify-center text-chocolate/50 hover:text-terracotta transition-colors"
                           >
                             <Minus size={16} />
                           </button>
                           <span className="w-12 text-center font-black text-chocolate text-sm line-clamp-1">{item.quantity}</span>
                           <button 
-                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                             onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColor, item.selectedSize, item.shippingZone)}
                              className="w-10 h-10 flex items-center justify-center text-chocolate/50 hover:text-terracotta transition-colors"
                           >
                             <Plus size={16} />
                           </button>
                         </div>
                         <button 
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.shippingZone)}
                           className="text-[10px] font-black text-chocolate/20 hover:text-red-500 uppercase tracking-[0.2em] transition-colors flex items-center gap-2"
                         >
                           <Trash2 size={12} /> Supprimer
@@ -142,7 +156,7 @@ export default function CartPage() {
 
                       <div className="text-right sm:min-w-[120px]">
                         <p className="text-2xl font-black text-chocolate tracking-tighter">
-                          {item.price}
+                          {(item.price * item.quantity).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -215,6 +229,23 @@ export default function CartPage() {
 
         </div>
       </div>
+
+      <Modal
+        isOpen={showClearModal}
+        onClose={() => setShowClearModal(false)}
+        title="Vider le panier"
+        subtitle="Cette action supprimera tous vos articles."
+        icon={Trash2}
+        maxWidth="md"
+      >
+        <div className="space-y-8">
+           <p className="text-sm font-bold text-chocolate/60 leading-relaxed italic">Êtes-vous sûr de vouloir vider complètement votre panier ? Cette action est irréversible.</p>
+           <div className="flex gap-4">
+              <Button variant="ghost" className="flex-1" onClick={() => setShowClearModal(false)}>Annuler</Button>
+              <Button variant="danger" className="flex-1" onClick={confirmClearCart}>Oui, vider tout</Button>
+           </div>
+        </div>
+      </Modal>
     </div>
   );
 }

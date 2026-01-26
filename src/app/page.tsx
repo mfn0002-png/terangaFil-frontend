@@ -4,11 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Heart, ShoppingCart, ChevronRight, Store, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import { useAuthStore } from '@/stores/authStore';
 import { useState, useEffect } from 'react';
 import { catalogService, Product, Supplier } from '@/services/catalogService';
 
 export default function Home() {
   const { addItem } = useCartStore();
+  const { user } = useAuthStore();
 
   const categories = [
     { name: 'Fils', image: '/images/cat_yarn.png', color: 'bg-leaf' },
@@ -175,30 +177,33 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container mx-auto px-4 pb-24">
-        <div className="bg-chocolate rounded-[60px] p-12 md:p-24 overflow-hidden relative group">
-          <div className="absolute inset-0 opacity-10 pointer-events-none">
-            <Image src="/images/auth_sidebar.png" alt="Overlay" fill className="object-cover" />
-          </div>
-          <div className="relative z-10 flex flex-col items-center text-center space-y-8">
-            <div className="bg-terracotta p-4 rounded-3xl shadow-2xl">
-              <Store className="text-white" size={40} />
+      {/* Become Supplier Section - Only for CLIENT or Guest */}
+      {(!user || user.role === 'CLIENT') && (
+        <section className="container mx-auto px-4 pb-24">
+          <div className="bg-chocolate rounded-[60px] p-12 md:p-24 overflow-hidden relative group">
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <Image src="/images/auth_sidebar.png" alt="Overlay" fill className="object-cover" />
             </div>
-            <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter max-w-2xl leading-none">
-              Vous êtes artisan ou possédez une mercerie ?
-            </h2>
-            <p className="text-sand/60 font-bold text-lg max-w-xl">
-              Rejoignez la première marketplace dédiée à la couture et au crochet au Sénégal et boostez vos ventes.
-            </p>
-            <Link 
-              href="/auth/register-supplier" 
-              className="bg-white text-chocolate px-12 py-6 rounded-full font-black text-sm uppercase tracking-widest hover:bg-terracotta hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
-            >
-              Créer ma boutique gratuitement
-            </Link>
+            <div className="relative z-10 flex flex-col items-center text-center space-y-8">
+              <div className="bg-terracotta p-4 rounded-3xl shadow-2xl">
+                <Store className="text-white" size={40} />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black text-white tracking-tighter max-w-2xl leading-none">
+                Vous êtes artisan ou possédez une mercerie ?
+              </h2>
+              <p className="text-sand/60 font-bold text-lg max-w-xl">
+                Rejoignez la première marketplace dédiée à la couture et au crochet au Sénégal et boostez vos ventes.
+              </p>
+              <Link 
+                href="/auth/register-supplier" 
+                className="bg-white text-chocolate px-12 py-6 rounded-full font-black text-sm uppercase tracking-widest hover:bg-terracotta hover:text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+              >
+                Créer ma boutique gratuitement
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
     </main>
   );

@@ -19,7 +19,15 @@ export interface Product {
   supplier: {
     id: number;
     shopName: string;
+    shipping?: ShippingRate[];
   };
+}
+
+export interface ShippingRate {
+  id: number;
+  zone: string;
+  price: number;
+  delay: string;
 }
 
 export interface Supplier {
@@ -32,6 +40,7 @@ export interface Supplier {
   location?: string;
   deliveryTime?: string;
   rating?: string;
+  shipping?: ShippingRate[];
 }
 
 export interface ProductFilters {

@@ -11,10 +11,10 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   
-  // Masquer la Navbar et le Footer pour toutes les pages commençant par /auth
-  const isAuthPage = pathname?.startsWith('/auth');
+  // Masquer la Navbar et le Footer pour toutes les pages commençant par /auth ou /dashboard
+  const isExcludedPage = pathname?.startsWith('/auth') || pathname?.startsWith('/dashboard');
 
-  if (isAuthPage) {
+  if (isExcludedPage) {
     return <main className="flex-1">{children}</main>;
   }
 

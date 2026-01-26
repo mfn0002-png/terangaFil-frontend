@@ -8,6 +8,7 @@ import { catalogService, Product } from '@/services/catalogService';
 import { favoriteService } from '@/services/favoriteService';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
+import { toast } from '@/stores/useToastStore';
 
 export default function ProductDetailsPage() {
   const params = useParams();
@@ -23,6 +24,10 @@ export default function ProductDetailsPage() {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
+  const [shippingZone, setShippingZone] = useState<string>('');
+  const [shippingPrice, setShippingPrice] = useState<number>(0);
+  const [shopProducts, setShopProducts] = useState<Product[]>([]);
+  const [loadingShop, setLoadingShop] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -36,10 +41,30 @@ export default function ProductDetailsPage() {
         if (data.sizes && data.sizes.length > 0) {
           setSelectedSize(data.sizes[0]);
         }
+        if (data.supplier.shipping && data.supplier.shipping.length > 0) {
+          setShippingZone(data.supplier.shipping[0].zone);
+          setShippingPrice(data.supplier.shipping[0].price);
+        }
+        
+        // Fetch more from this shop
+        fetchShopProducts(data.supplier.id, id);
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const fetchShopProducts = async (supplierId: number, currentProductId: number) => {
+      setLoadingShop(true);
+      try {
+        const data = await catalogService.getProducts({ supplierId });
+        // Filter out current product and take 4
+        setShopProducts(data.filter(p => p.id !== currentProductId).slice(0, 4));
+      } catch (error) {
+        console.error('Error fetching shop products:', error);
+      } finally {
+        setLoadingShop(false);
       }
     };
 
@@ -53,14 +78,16 @@ export default function ProductDetailsPage() {
       name: product.name,
       price: product.price,
       quantity,
-      image: product.imageUrl,
+      image: product.imageUrl || '/images/placeholder.png',
       imageUrl: product.imageUrl,
       supplierId: product.supplier.id,
       supplierName: product.supplier.shopName,
       selectedColor: selectedColor,
       selectedSize: selectedSize,
+      shippingZone: shippingZone,
+      shippingPrice: shippingPrice,
     });
-    alert('Produit ajouté au panier !');
+    toast.success('Produit ajouté au panier !');
   };
 
   const handleToggleFavorite = async () => {
@@ -244,6 +271,34 @@ export default function ProductDetailsPage() {
               </div>
             )}
 
+            {/* Shipping Zone Selection */}
+            {product.supplier.shipping && product.supplier.shipping.length > 0 && (
+              <div>
+                <h3 className="text-xs font-black text-chocolate/30 uppercase tracking-[0.2em] mb-4">Zone de livraison</h3>
+                <div className="relative">
+                  <select
+                    value={shippingZone}
+                    onChange={(e) => {
+                      const zone = e.target.value;
+                      setShippingZone(zone);
+                      const rate = product.supplier.shipping?.find(r => r.zone === zone);
+                      if (rate) setShippingPrice(rate.price);
+                    }}
+                    className="w-full bg-sand/30 border-2 border-transparent focus:border-terracotta/20 focus:bg-white rounded-2xl py-4 px-6 text-sm font-bold outline-none transition-all appearance-none cursor-pointer text-chocolate"
+                  >
+                    {product.supplier.shipping.map((rate) => (
+                      <option key={rate.id} value={rate.zone}>
+                        {rate.zone} ({rate.price === 0 ? 'Gratuit' : `${rate.price.toLocaleString()} FCFA`})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <Truck size={18} className="text-terracotta" />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Quantity & Actions */}
             <div className="space-y-4">
               <div>
@@ -292,7 +347,9 @@ export default function ProductDetailsPage() {
                 <Truck className="text-terracotta" size={24} />
                 <div>
                   <p className="text-xs font-black text-chocolate">Livraison rapide</p>
-                  <p className="text-[10px] text-chocolate/40 font-bold">Sous 2-5 jours</p>
+                  <p className="text-[10px] text-chocolate/40 font-bold">
+                    {shippingPrice === 0 ? 'Offerte' : `${shippingPrice.toLocaleString()} FCFA`}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -357,7 +414,39 @@ export default function ProductDetailsPage() {
               Voir tout →
             </button>
           </div>
-          <p className="text-chocolate/40 font-bold text-center py-12">Chargement des produits similaires...</p>
+          
+          {loadingShop ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+               {[1, 2, 3, 4].map(i => (
+                 <div key={i} className="aspect-square bg-white rounded-3xl animate-pulse border border-sand" />
+               ))}
+            </div>
+          ) : shopProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {shopProducts.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => router.push(`/public/product/${p.id}`)}
+                  className="group bg-white rounded-[40px] overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-sand text-left"
+                >
+                  <div className="relative aspect-square overflow-hidden">
+                    <Image
+                      src={p.imageUrl || '/images/placeholder.png'}
+                      alt={p.name}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h4 className="font-bold text-chocolate text-sm line-clamp-1 mb-2 tracking-tight">{p.name}</h4>
+                    <p className="font-black text-terracotta">{p.price.toLocaleString()} CFA</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-chocolate/40 font-bold text-center py-12">Aucun autre produit pour cette boutique.</p>
+          )}
         </div>
       </div>
     </div>

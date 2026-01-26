@@ -7,6 +7,13 @@ interface User {
   name: string;
   role: 'CLIENT' | 'SUPPLIER' | 'ADMIN';
   phoneNumber: string;
+  supplier?: {
+    id: number;
+    shopName: string;
+    description?: string;
+    logoUrl?: string;
+    bannerUrl?: string;
+  };
 }
 
 interface AuthState {
@@ -23,6 +30,8 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       setAuth: (user, token) => {
         set({ user, token });
+      console.log(user);
+      
         if (typeof window !== 'undefined') {
           localStorage.setItem('token', token);
         }

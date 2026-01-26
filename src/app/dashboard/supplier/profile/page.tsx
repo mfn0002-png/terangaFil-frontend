@@ -2,6 +2,6 @@
 
 import { UnifiedProfile } from '@/components/profile/UnifiedProfile';
 
-export default function ProfilePage() {
+export default function SupplierProfileDashboardPage() {
   return <UnifiedProfile />;
 }

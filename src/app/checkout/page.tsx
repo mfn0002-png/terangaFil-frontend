@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import api from '@/lib/api';
+import { toast } from '@/stores/useToastStore';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -22,15 +23,38 @@ export default function CheckoutPage() {
   const [activePayment, setActivePayment] = useState<'WAVE' | 'OM' | 'CARD'>('WAVE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const shippingFeesPerSupplier = 1500; // Frais fixes par boutique pour l'exemple
-  const totalVendors = Object.keys(groupedItems).length;
-  const totalShipping = totalVendors * shippingFeesPerSupplier;
-  const grandTotal = getTotalPrice() + totalShipping;
+  // Calcul des frais de port réels basés sur les zones uniques par fournisseur
+  const calculateShippingForSupplier = (supplierItems: any[]) => {
+    const uniqueZones = new Set<string>();
+    supplierItems.forEach(item => {
+      if (item.shippingZone) {
+        uniqueZones.add(`${item.shippingZone}_${item.shippingPrice}`);
+      }
+    });
+    
+    let total = 0;
+    uniqueZones.forEach(zoneKey => {
+      const [_, price] = zoneKey.split('_');
+      total += Number(price || 0);
+    });
+    return total;
+  };
+
+  const totalShipping = Object.values(groupedItems).reduce((acc, supplierItems) => {
+    return acc + calculateShippingForSupplier(supplierItems);
+  }, 0);
+
+  const subtotalItems = items.reduce((sum, item) => {
+    const priceNum = parseInt(item.price.toString().replace(/[^0-9]/g, ''));
+    return sum + (priceNum * item.quantity);
+  }, 0);
+
+  const grandTotal = subtotalItems + totalShipping;
 
   const handleSubmitOrder = async () => {
     // Validation
     if (!checkoutInfo.firstName || !checkoutInfo.lastName || !checkoutInfo.phoneNumber || !checkoutInfo.address) {
-      alert('Veuillez remplir tous les champs de livraison.');
+      toast.error('Veuillez remplir tous les champs de livraison.');
       return;
     }
 
@@ -38,15 +62,14 @@ export default function CheckoutPage() {
 
     try {
       // Préparer les données pour l'API backend
-      // Assurer que les productId sont des nombres
       const orderData = {
         items: items.map(item => ({
           productId: Number(item.id),
           quantity: Number(item.quantity),
-          selectedColor: item.selectedColor || null,
-          selectedSize: item.selectedSize || null,
+          color: item.selectedColor || null,
+          size: item.selectedSize || null,
+          shippingZone: item.shippingZone || null,
         })),
-        shippingZone: checkoutInfo.address,
         paymentMethod: activePayment,
         customerInfo: {
           firstName: checkoutInfo.firstName,
@@ -59,15 +82,15 @@ export default function CheckoutPage() {
       // Envoyer la commande au backend
       const response = await api.post('/orders', orderData);
 
-      // Vider le panier
+      // Vider le panier et les infos de checkout
       clearCart();
 
       // Rediriger vers une page de confirmation
-      alert(`✅ Commande confirmée ! Numéro de commande : #${response.data.id}`);
+      toast.success(`✅ Commande confirmée ! Numéro : #${response.data.id}`);
       router.push('/');
     } catch (error: any) {
       console.error('Erreur lors de la soumission de la commande:', error);
-      alert(error.response?.data?.message || 'Erreur lors de la création de la commande. Veuillez réessayer.');
+      toast.error(error.response?.data?.message || 'Erreur lors de la création de la commande.');
     } finally {
       setIsSubmitting(false);
     }
@@ -78,7 +101,7 @@ export default function CheckoutPage() {
       <div className="container mx-auto px-4 py-12">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-chocolate/30 mb-8">
-          <Link href="/cart" className="hover:text-terracotta">Panier</Link>
+          <Link href="/cart" className="hover:text-terracotta transition-colors">Panier</Link>
           <ChevronRight size={10} />
           <span className="text-chocolate/60">Paiement</span>
         </nav>
@@ -89,8 +112,7 @@ export default function CheckoutPage() {
           
           {/* Left Column: Forms */}
           <div className="lg:col-span-7 space-y-12">
-            
-            {/* Step 1: Livraison */}
+            {/* Same form as before */}
             <section className="space-y-8">
               <div className="flex items-center gap-6">
                 <div className="w-10 h-10 bg-terracotta text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg shadow-terracotta/20">1</div>
@@ -101,15 +123,13 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-chocolate/30 uppercase tracking-widest ml-2 italic">Prénom</label>
-                    <div className="relative">
-                       <input 
-                        type="text" 
-                        placeholder="Ex: Aminata" 
-                        value={checkoutInfo.firstName}
-                        onChange={(e) => setCheckoutInfo({ firstName: e.target.value })}
-                        className="w-full bg-sand/20 border-2 border-transparent focus:border-terracotta/20 focus:bg-white rounded-2xl py-4 px-6 text-sm font-bold outline-none transition-all placeholder:text-chocolate/20" 
-                      />
-                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="Ex: Aminata" 
+                      value={checkoutInfo.firstName}
+                      onChange={(e) => setCheckoutInfo({ firstName: e.target.value })}
+                      className="w-full bg-sand/20 border-2 border-transparent focus:border-terracotta/20 focus:bg-white rounded-2xl py-4 px-6 text-sm font-bold outline-none transition-all placeholder:text-chocolate/20" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-chocolate/30 uppercase tracking-widest ml-2 italic">Nom</label>
@@ -153,7 +173,6 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Step 2: Paiement */}
             <section className="space-y-8">
               <div className="flex items-center gap-6">
                 <div className="w-10 h-10 bg-terracotta text-white rounded-full flex items-center justify-center font-black text-xs shadow-lg shadow-terracotta/20">2</div>
@@ -184,64 +203,54 @@ export default function CheckoutPage() {
             </section>
           </div>
 
-          {/* Right Column: Sticky Summary */}
+          {/* Right Column: Summary */}
           <aside className="lg:col-span-5 lg:sticky lg:top-8">
              <div className="bg-white rounded-[45px] p-8 shadow-2xl shadow-chocolate/5 border border-sand space-y-10">
-                <div className="flex items-center justify-between">
-                   <h3 className="text-2xl font-black text-chocolate italic">Récapitulatif de la commande</h3>
-                </div>
+                <h3 className="text-2xl font-black text-chocolate italic">Récapitulatif</h3>
 
-                <div className="bg-leaf/5 rounded-3xl p-6 border border-leaf/10 flex gap-4">
-                   <Info className="text-leaf shrink-0" size={20} />
-                   <p className="text-[11px] font-bold text-leaf leading-relaxed uppercase tracking-tight">Note: Vos articles seront livrés séparément par chaque boutique.</p>
-                </div>
-
-                {/* Grouped items by supplier */}
                 <div className="space-y-10">
                    {Object.keys(groupedItems).map((supplierId) => {
-                     const items = groupedItems[supplierId];
+                     const supplierItems = groupedItems[supplierId];
+                     const supplierShipping = calculateShippingForSupplier(supplierItems);
+                     
                      return (
                        <div key={supplierId} className="space-y-6">
-                          <div className="flex items-center justify-between border-b border-sand pb-4">
-                             <div className="space-y-1">
-                                <h4 className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em]">{items[0].supplierName}</h4>
-                                <p className="text-[8px] font-bold text-chocolate/30 uppercase tracking-widest">Livraison 24-48h</p>
-                             </div>
-                             <span className="text-[9px] font-black text-leaf uppercase tracking-widest bg-leaf/10 px-3 py-1 rounded-full">En stock</span>
+                          <div className="border-b border-sand pb-4">
+                             <h4 className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em]">{supplierItems[0].supplierName}</h4>
                           </div>
 
                           <div className="space-y-6">
-                             {items.map((item) => (
-                               <div key={item.id} className="flex gap-4">
+                             {supplierItems.map((item, idx) => (
+                               <div key={`${item.id}_${idx}`} className="flex gap-4">
                                   <div className="w-16 h-16 rounded-2xl bg-sand/20 overflow-hidden shrink-0 relative">
-                                     <Image src={item.image} alt={item.name} fill className="object-cover p-2" />
+                                     <Image src={item.image || '/images/placeholder.png'} alt={item.name} fill className="object-cover p-2" />
                                   </div>
                                   <div className="flex-1 space-y-1">
                                      <h5 className="font-bold text-chocolate text-sm tracking-tight">{item.name}</h5>
-                                     {item.selectedColor && (
-                                       <p className="text-[10px] font-bold text-terracotta">Couleur: {item.selectedColor}</p>
-                                     )}
-                                     <p className="text-[10px] font-bold text-chocolate/30">Qté: {item.quantity}</p>
-                                     <p className="font-black text-chocolate text-xs tracking-tighter">{item.price.toLocaleString()} CFA</p>
+                                     <div className="flex flex-wrap gap-x-3 gap-y-1">
+                                       {item.selectedColor && <span className="text-[9px] font-bold text-chocolate/40 uppercase">Couleur: {item.selectedColor}</span>}
+                                       {item.selectedSize && <span className="text-[9px] font-bold text-chocolate/40 uppercase">Taille: {item.selectedSize}</span>}
+                                       {item.shippingZone && <span className="text-[9px] font-black text-terracotta uppercase">Livraison: {item.shippingZone}</span>}
+                                     </div>
+                                     <p className="font-black text-chocolate text-xs tracking-tighter mt-1">{item.price.toLocaleString()} CFA x {item.quantity}</p>
                                   </div>
                                </div>
                              ))}
                           </div>
 
-                          <div className="flex justify-between items-center text-[10px] font-bold text-chocolate/40 uppercase tracking-widest">
-                             <span>Frais de port ({items[0].supplierName})</span>
-                             <span className="text-terracotta">+{shippingFeesPerSupplier.toLocaleString()} CFA</span>
+                          <div className="flex justify-between items-center text-[10px] font-bold text-chocolate/40 uppercase tracking-widest pt-2">
+                             <span>Frais de port boutique</span>
+                             <span className="text-terracotta">+{supplierShipping.toLocaleString()} CFA</span>
                           </div>
                        </div>
                      );
                    })}
                 </div>
 
-                {/* Subtotals & Total */}
                 <div className="pt-8 border-t-2 border-dashed border-sand space-y-4">
                    <div className="flex justify-between text-xs font-bold text-chocolate/60">
                       <span>Sous-total articles</span>
-                      <span className="font-black text-chocolate">{getTotalPrice().toLocaleString()} CFA</span>
+                      <span className="font-black text-chocolate">{subtotalItems.toLocaleString()} CFA</span>
                    </div>
                    <div className="flex justify-between text-xs font-bold text-chocolate/60">
                       <span>Total Frais de port</span>
@@ -255,14 +264,12 @@ export default function CheckoutPage() {
 
                 <button 
                   onClick={handleSubmitOrder}
-                  disabled={isSubmitting}
-                  className="w-full bg-terracotta text-white py-6 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-chocolate transition-all active:scale-95 shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-4 group disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={isSubmitting || items.length === 0}
+                  className="w-full bg-terracotta text-white py-6 rounded-3xl font-black text-sm uppercase tracking-widest hover:bg-chocolate transition-all active:scale-95 shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-4 group disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Traitement en cours...' : 'Confirmer la commande'}
+                  {isSubmitting ? 'Traitement...' : 'Confirmer la commande'}
                   {!isSubmitting && <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />}
                 </button>
-
-                <p className="text-center text-[8px] font-bold text-chocolate/20 uppercase tracking-widest leading-relaxed">En confirmant, vous acceptez nos conditions générales de vente et la politique de confidentialité.</p>
              </div>
           </aside>
         </div>
