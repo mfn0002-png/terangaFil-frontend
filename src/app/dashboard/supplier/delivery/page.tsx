@@ -22,11 +22,11 @@ import { Button } from '@/components/shared/Button';
 export default function DeliverySettingsPage() {
   const [shippingRates, setShippingRates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [paymentInfo, setPaymentInfo] = useState({
-    method: 'WAVE',
-    phoneNumber: ''
-  });
+  const [savingGlobal, setSavingGlobal] = useState(false);
+  const [savingRates, setSavingRates] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [selectedMethods, setSelectedMethods] = useState<string[]>(['WAVE']);
+  const [paymentDetails, setPaymentDetails] = useState<Record<string, string>>({});
   const [rateToRemoveIndex, setRateToRemoveIndex] = useState<number | null>(null);
 
   useEffect(() => {
@@ -37,10 +37,31 @@ export default function DeliverySettingsPage() {
           supplierService.getPaymentSettings().catch(() => ({ method: 'WAVE', phoneNumber: '' }))
         ]);
         setShippingRates(rates || []);
-        if (settings) setPaymentInfo({
-          method: settings.paymentMethod || 'WAVE',
-          phoneNumber: settings.paymentPhoneNumber || ''
-        });
+        if (settings) {
+          // Parse methods (stored as "WAVE,OM")
+          const methods = settings.paymentMethod ? settings.paymentMethod.split(',') : ['WAVE'];
+          setSelectedMethods(methods);
+
+          // Parse details (stored as JSON string)
+          try {
+            const details = settings.paymentPhoneNumber ? JSON.parse(settings.paymentPhoneNumber) : {};
+            // If it's a simple string (legacy), assign it to the first method
+            if (typeof details === 'string' && methods.length > 0) {
+               const newDetails: Record<string, string> = {};
+               methods.forEach((m: string) => newDetails[m] = details);
+               setPaymentDetails(newDetails);
+            } else {
+               setPaymentDetails(details);
+            }
+          } catch (e) {
+            // Fallback for simple string legacy data
+            if (settings.paymentPhoneNumber && methods.length > 0) {
+               const newDetails: Record<string, string> = {};
+               methods.forEach((m: string) => newDetails[m] = settings.paymentPhoneNumber);
+               setPaymentDetails(newDetails);
+            }
+          }
+        }
       } catch (error) {
         console.error('Error fetching delivery settings:', error);
       } finally {
@@ -83,18 +104,48 @@ export default function DeliverySettingsPage() {
     }
   };
 
-  const handleSaveAll = async () => {
-    setSaving(true);
+  const handleSaveShippingRates = async () => {
+    setSavingRates(true);
     try {
-      // Save rates
       await Promise.all(shippingRates.map(rate => supplierService.saveShippingRate(rate)));
-      // Save payment
-      await supplierService.updatePaymentSettings(paymentInfo);
-      toast.success('Paramètres enregistrés avec succès !');
+      toast.success('Zones de livraison enregistrées !');
     } catch (error) {
-      toast.error("Erreur lors de l'enregistrement.");
+      toast.error("Erreur lors de l'enregistrement des zones.");
     } finally {
-      setSaving(false);
+      setSavingRates(false);
+    }
+  };
+
+  const handleSavePaymentInfo = async () => {
+    setSavingPayment(true);
+    try {
+      await supplierService.updatePaymentSettings({
+        method: selectedMethods.join(','),
+        phoneNumber: JSON.stringify(paymentDetails)
+      });
+      toast.success('Infos de paiement enregistrées !');
+    } catch (error) {
+      toast.error("Erreur lors de l'enregistrement du paiement.");
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    setSavingGlobal(true);
+    try {
+      await Promise.all([
+        Promise.all(shippingRates.map(rate => supplierService.saveShippingRate(rate))),
+        supplierService.updatePaymentSettings({
+          method: selectedMethods.join(','),
+          phoneNumber: JSON.stringify(paymentDetails)
+        })
+      ]);
+      toast.success('Tous les paramètres ont été enregistrés !');
+    } catch (error) {
+      toast.error("Erreur lors de l'enregistrement global.");
+    } finally {
+      setSavingGlobal(false);
     }
   };
 
@@ -118,20 +169,29 @@ export default function DeliverySettingsPage() {
         </div>
         <button 
           onClick={handleSaveAll}
-          disabled={saving}
+          disabled={savingGlobal}
           className="px-10 py-4 bg-[#E07A5F] text-white rounded-full font-black text-xs uppercase tracking-widest hover:bg-[#3D2B1F] transition-all shadow-2xl shadow-[#E07A5F]/20 active:scale-95 disabled:opacity-70 flex items-center gap-3"
         >
-          {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-          Enregistrer les modifications
+          {savingGlobal ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+          Tout enregistrer
         </button>
       </div>
 
       {/* Shipping Zones */}
       <section className="space-y-8">
-         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
              <h2 className="text-xl font-black text-[#3D2B1F] uppercase tracking-widest">Zones de Livraison</h2>
              <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[9px] font-black uppercase tracking-widest">Actif</span>
-         </div>
+             <Button 
+               onClick={handleSaveShippingRates}
+               loading={savingRates}
+               size="sm"
+               variant="outline"
+               className="ml-auto"
+             >
+               Sauvegarder les zones
+             </Button>
+          </div>
          <p className="text-[11px] font-bold text-[#3D2B1F]/40 uppercase tracking-widest">Ajoutez les régions où vous pouvez expédier vos produits crochetés.</p>
 
          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -208,45 +268,62 @@ export default function DeliverySettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                {[
                  { id: 'WAVE', name: 'Wave', detail: 'Paiement instantané', icon: Smartphone, color: 'border-orange-500 bg-orange-50/10' },
-                 { id: 'OM', name: 'Orange Money', detail: 'Sous 24 heures', icon: Smartphone, color: 'border-[#3D2B1F] bg-black text-white' },
+                 { id: 'OM', name: 'Orange Money', detail: 'Paiement instantané', icon: Smartphone, color: 'border-[#3D2B1F] bg-black text-white' },
                  { id: 'BANK', name: 'Virement Bancaire', detail: 'Sous 3-5 jours', icon: Building2, color: 'border-gray-100 bg-gray-50' },
-               ].map((m) => (
+               ].map((m) => {
+                 const isSelected = selectedMethods.includes(m.id);
+                 return (
                   <button
                     key={m.id}
-                    onClick={() => setPaymentInfo({...paymentInfo, method: m.id})}
-                    className={`relative p-8 rounded-[35px] border-4 text-left transition-all ${paymentInfo.method === m.id ? m.color : 'border-[#FDFCFB] bg-[#FDFCFB] hover:border-[#F0E6D2]'}`}
+                    onClick={() => {
+                       if (isSelected) {
+                          setSelectedMethods(selectedMethods.filter(id => id !== m.id));
+                       } else {
+                          if (selectedMethods.length < 3) setSelectedMethods([...selectedMethods, m.id]);
+                          else toast.error('Maximum 3 méthodes de paiement');
+                       }
+                    }}
+                    className={`relative p-8 rounded-[35px] border-4 text-left transition-all ${isSelected ? m.color : 'border-[#FDFCFB] bg-[#FDFCFB] hover:border-[#F0E6D2]'}`}
                   >
-                     <div className={`p-3 rounded-xl mb-4 inline-block ${paymentInfo.method === m.id ? 'bg-white/20' : 'bg-[#3D2B1F]/5 text-[#3D2B1F]/30'}`}>
+                     <div className={`p-3 rounded-xl mb-4 inline-block ${isSelected ? 'bg-white/20' : 'bg-[#3D2B1F]/5 text-[#3D2B1F]/30'}`}>
                         <m.icon size={24} />
                      </div>
-                     <p className={`text-base font-black ${paymentInfo.method === m.id ? '' : 'text-[#3D2B1F]'}`}>{m.name}</p>
+                     <p className={`text-base font-black ${isSelected ? '' : 'text-[#3D2B1F]'}`}>{m.name}</p>
                      <p className={`text-[10px] font-bold opacity-40 uppercase tracking-widest`}>{m.detail}</p>
-                     {paymentInfo.method === m.id && (
+                     {isSelected && (
                         <div className="absolute top-6 right-6 w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
                            <Check size={14} />
                         </div>
                      )}
                   </button>
-               ))}
+                 );
+               })}
             </div>
 
-            <div className="space-y-4 max-w-md">
-               <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 italic px-2">Numéro de téléphone lié</label>
-               <div className="relative group">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                     <span className="text-sm font-black text-[#3D2B1F]/30">+221</span>
-                     <div className="w-px h-4 bg-[#F0E6D2]" />
+            <div className="space-y-6">
+               {selectedMethods.map(methodId => (
+                  <div key={methodId} className="space-y-4 max-w-md animate-in fade-in slide-in-from-top-4 duration-500">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 italic px-2">
+                       {methodId === 'BANK' ? 'IBAN / Numéro de compte' : `Numéro ${methodId === 'WAVE' ? 'Wave' : 'Orange Money'}`}
+                    </label>
+                    <div className="relative group">
+                       {methodId !== 'BANK' && (
+                          <div className="absolute left-6 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                             <span className="text-sm font-black text-[#3D2B1F]/30">+221</span>
+                             <div className="w-px h-4 bg-[#F0E6D2]" />
+                          </div>
+                       )}
+                       <input 
+                          type={methodId === 'BANK' ? 'text' : 'tel'}
+                          value={paymentDetails[methodId] || ''}
+                          onChange={(e) => setPaymentDetails({...paymentDetails, [methodId]: e.target.value})}
+                          placeholder={methodId === 'BANK' ? 'SN...' : '77 000 00 00'}
+                          className={`w-full bg-[#FDFCFB] border-2 border-[#F0E6D2]/30 rounded-2xl py-5 ${methodId === 'BANK' ? 'px-8' : 'pl-24 pr-8'} text-sm font-black outline-none focus:border-[#E07A5F]/30`}
+                       />
+                    </div>
                   </div>
-                  <input 
-                    type="tel" 
-                    value={paymentInfo.phoneNumber}
-                    onChange={(e) => setPaymentInfo({...paymentInfo, phoneNumber: e.target.value})}
-                    placeholder="77 000 00 00"
-                    className="w-full bg-[#FDFCFB] border-2 border-[#F0E6D2]/30 rounded-2xl py-5 pl-24 pr-8 text-sm font-black outline-none focus:border-[#E07A5F]/30"
-                  />
-               </div>
-               <p className="text-[9px] font-bold text-[#3D2B1F]/40 uppercase italic px-4">Utilisé pour les transferts automatiques de fonds.</p>
-            </div>
+               ))}
+           </div>
          </div>
 
          <div className="pt-10 border-t border-[#F0E6D2]/20 flex items-center justify-between">
@@ -254,11 +331,11 @@ export default function DeliverySettingsPage() {
              <div className="flex items-center gap-6">
                 <Button variant="ghost" size="sm" onClick={() => {}}>Annuler</Button>
                 <Button 
-                  onClick={handleSaveAll}
-                  loading={saving}
+                  onClick={handleSavePaymentInfo}
+                  loading={savingPayment}
                   size="md"
                 >
-                  Sauvegarder tout
+                  Sauvegarder le paiement
                 </Button>
              </div>
          </div>

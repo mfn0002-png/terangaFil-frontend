@@ -24,17 +24,20 @@ export default function SupplierDashboardPage() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<SupplierStats | null>(null);
   const [products, setProducts] = useState<any[]>([]);
+  const [shippingRates, setShippingRates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, productsData] = await Promise.all([
+        const [statsData, productsData, ratesData] = await Promise.all([
           supplierService.getStats(),
-          supplierService.getProducts()
+          supplierService.getProducts(),
+          supplierService.getShippingRates()
         ]);
         setStats(statsData);
         setProducts(productsData.slice(0, 5)); // Just show top 5
+        setShippingRates(ratesData || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -184,14 +187,18 @@ export default function SupplierDashboardPage() {
                   <p className="text-xs font-medium text-white/50 leading-relaxed uppercase tracking-widest">Configurez vos frais par zones géographiques.</p>
                 </div>
                 <div className="space-y-4">
-                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Dakar Ville</span>
-                      <span className="text-xs font-black">1 500 CFA</span>
-                   </div>
-                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 opacity-50">
-                      <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Thiès</span>
-                      <span className="text-xs font-black">3 000 CFA</span>
-                   </div>
+                   {shippingRates.length > 0 ? (
+                      shippingRates.slice(0, 2).map((rate, i) => (
+                        <div key={i} className={`flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 ${i > 0 ? 'opacity-50' : ''}`}>
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{rate.zone}</span>
+                            <span className="text-xs font-black">{Number(rate.price).toLocaleString()} CFA</span>
+                        </div>
+                      ))
+                   ) : (
+                      <div className="p-4 bg-white/5 rounded-2xl border border-white/10 text-center">
+                         <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Aucune zone configurée</span>
+                      </div>
+                   )}
                 </div>
                 <Link href="/dashboard/supplier/delivery" className="w-full flex items-center justify-between p-5 bg-[#E07A5F] rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-white hover:text-[#3D2B1F] transition-all transform hover:scale-[1.02]">
                    Gérer les zones

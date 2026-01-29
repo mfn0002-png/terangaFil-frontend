@@ -392,6 +392,7 @@ export default function ProductFormPage() {
                  <div className="relative">
                     <input 
                         type="number" 
+                        min={0}
                         required
                         value={formData.price}
                         onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
@@ -403,6 +404,7 @@ export default function ProductFormPage() {
               <Input 
                 label="Quantité en stock"
                 type="number"
+                min={0}
                 required
                 value={formData.stock}
                 onChange={(e) => setFormData({...formData, stock: Number(e.target.value)})}

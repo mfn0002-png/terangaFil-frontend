@@ -61,7 +61,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-      // Préparer les données pour l'API backend
+      // 1. Créer la commande d'abord (statut PENDING)
       const orderData = {
         items: items.map(item => ({
           productId: Number(item.id),
@@ -79,15 +79,31 @@ export default function CheckoutPage() {
         }
       };
 
-      // Envoyer la commande au backend
-      const response = await api.post('/orders', orderData);
+      const orderResponse = await api.post('/orders', orderData);
+      const orderId = orderResponse.data.id;
 
-      // Vider le panier et les infos de checkout
-      clearCart();
+      // 2. Initialiser le paiement via PayDunya
+      const paymentResponse = await api.post('/payment/initiate', {
+        orderId,
+        amount: grandTotal,
+        customerName: `${checkoutInfo.firstName} ${checkoutInfo.lastName}`,
+        customerEmail: undefined, // Optionnel
+        customerPhone: checkoutInfo.phoneNumber,
+      });
 
-      // Rediriger vers une page de confirmation
-      toast.success(`✅ Commande confirmée ! Numéro : #${response.data.id}`);
-      router.push('/');
+      // 3. Rediriger vers la page de paiement PayDunya
+      if (paymentResponse.data.paymentUrl) {
+        // Sauvegarder l'ID de commande pour la page de retour
+        localStorage.setItem('pendingOrderId', orderId.toString());
+        
+        // Vider le panier avant la redirection
+        clearCart();
+        
+        // Rediriger vers PayDunya
+        window.location.href = paymentResponse.data.paymentUrl;
+      } else {
+        throw new Error('URL de paiement non reçue');
+      }
     } catch (error: any) {
       console.error('Erreur lors de la soumission de la commande:', error);
       toast.error(error.response?.data?.message || 'Erreur lors de la création de la commande.');
