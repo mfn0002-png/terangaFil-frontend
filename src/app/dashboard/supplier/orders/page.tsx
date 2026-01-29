@@ -30,6 +30,12 @@ export default function SupplierOrdersPage() {
   const [updating, setUpdating] = useState(false);
   const [stats, setStats] = useState<any>(null);
 
+  const computeTotals = (o: any) => {
+    const itemsSubtotal = (o.order.items || []).reduce((s: number, it: any) => s + (Number(it.price) * Number(it.quantity)), 0);
+    const supplierTotal = itemsSubtotal + (Number(o.shippingPrice || 0));
+    return { ...o, itemsSubtotal, supplierTotal };
+  };
+
   useEffect(() => {
     fetchOrdersAndStats();
   }, []);
@@ -40,7 +46,8 @@ export default function SupplierOrdersPage() {
         supplierService.getOrders(),
         supplierService.getStats()
       ]);
-      setOrders(ordersData);
+      const processed = (ordersData || []).map(computeTotals);
+      setOrders(processed);
       setStats(statsData.overview);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -55,7 +62,8 @@ export default function SupplierOrdersPage() {
     try {
       await supplierService.updateOrderStatus(id, status);
       // Refresh
-      const updated = await supplierService.getOrders();
+      const ordersRaw = await supplierService.getOrders();
+      const updated = (ordersRaw || []).map(computeTotals);
       setOrders(updated);
       const newSelected = updated.find((o: any) => o.id === id);
       setSelectedOrder(newSelected);
@@ -148,7 +156,7 @@ export default function SupplierOrdersPage() {
                     <p className="text-[10px] font-bold text-[#E07A5F] uppercase tracking-widest">{o.order.customerPhoneNumber}</p>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-base font-black text-[#3D2B1F] tracking-tighter">{o.order.total.toLocaleString()} CFA</span>
+                    <span className="text-base font-black text-[#3D2B1F] tracking-tighter">{(o.supplierTotal || 0).toLocaleString()} CFA</span>
                   </td>
                   <td className="px-8 py-6">
                      <Badge 
@@ -230,6 +238,13 @@ export default function SupplierOrdersPage() {
                        </div>
                     </div>
                   ))}
+               </div>
+            </div>
+
+            <div className="flex justify-end items-center gap-6 pt-4">
+               <div className="text-right">
+                  <p className="text-sm font-black text-[#3D2B1F]">{(selectedOrder.supplierTotal || 0).toLocaleString()} CFA</p>
+                  <p className="text-[10px] font-bold text-[#3D2B1F]/20">Articles: {(selectedOrder.itemsSubtotal || 0).toLocaleString()} CFA • Livraison: {(selectedOrder.shippingPrice || 0).toLocaleString()} CFA</p>
                </div>
             </div>
 
