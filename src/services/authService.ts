@@ -60,7 +60,7 @@ const authService = {
     return res.data;
   },
 
-  updateMe: async (data: { name?: string; email?: string; phoneNumber?: string }) => {
+  updateMe: async (data: { name?: string; email?: string; phoneNumber?: string; avatarUrl?: string }) => {
     const res = await api.put('/users/me', data);
     return res.data;
   },

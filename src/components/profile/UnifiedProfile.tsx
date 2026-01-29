@@ -26,6 +26,8 @@ import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
 import { Badge } from '@/components/shared/Badge';
 import { toast } from '@/stores/useToastStore';
+import { supplierService } from '@/services/supplierService';
+import { useRef } from 'react';
 
 export const UnifiedProfile = () => {
   const { user, token, logout, setAuth } = useAuthStore();
@@ -37,10 +39,15 @@ export const UnifiedProfile = () => {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
 
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phoneNumber: '',
+    phoneNumber: '', 
+    avatarUrl: '',
     shopName: '',
     description: '',
     logoUrl: '',
@@ -72,6 +79,7 @@ export const UnifiedProfile = () => {
           name: userData.name || '',
           email: userData.email || '',
           phoneNumber: userData.phoneNumber || '',
+          avatarUrl: userData.avatarUrl || '',
           shopName: userData.supplier?.shopName || '',
           description: userData.supplier?.description || '',
           logoUrl: userData.supplier?.logoUrl || '',
@@ -99,14 +107,17 @@ export const UnifiedProfile = () => {
         const updatedUser = await authService.updateMe({
           name: formData.name,
           email: formData.email,
-          phoneNumber: formData.phoneNumber
+          phoneNumber: formData.phoneNumber,
+          avatarUrl: formData.avatarUrl,
         });
         if (user) setAuth({ ...user, ...updatedUser }, token!);
         toast.success('Profil mis à jour !');
       } else if (activeTab === 'SHOP') {
-        await api.post('/supplier/setup', {
+        await supplierService.updateBranding({
           shopName: formData.shopName,
-          description: formData.description
+          description: formData.description,
+          logoUrl: formData.logoUrl,
+          bannerUrl: formData.bannerUrl,
         });
         const userData = await authService.getMe();
         if (userData && user) setAuth({ ...user, ...userData }, token!);
@@ -126,6 +137,17 @@ export const UnifiedProfile = () => {
       toast.error(error.message || error.response?.data?.message || "Erreur lors de la mise à jour.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImageChange = (type: 'avatarUrl' | 'logoUrl' | 'bannerUrl', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, [type]: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -177,9 +199,24 @@ export const UnifiedProfile = () => {
           <div className="flex flex-col items-center text-center gap-4 mb-10 px-2 pt-4">
             <div className="relative group">
                <div className="w-24 h-24 bg-[#E07A5F] rounded-[35px] flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-[#E07A5F]/20 overflow-hidden">
-                 {user.role === 'SUPPLIER' && formData.logoUrl ? <img src={formData.logoUrl} alt="" className="w-full h-full object-cover" /> : formData.name?.[0]?.toUpperCase()}
+                 {formData.avatarUrl ? (
+                   <img src={formData.avatarUrl} alt="" className="w-full h-full object-cover" />
+                 ) : (
+                   formData.name?.[0]?.toUpperCase()
+                 )}
                </div>
-               <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#3D2B1F] text-white rounded-2xl flex items-center justify-center border-4 border-white shadow-lg  hover:bg-[#E07A5F] transition-all">
+               <input 
+                  type="file" 
+                  ref={avatarInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={(e) => handleImageChange('avatarUrl', e)} 
+               />
+               <button 
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="absolute -bottom-2 -right-2 w-10 h-10 bg-[#3D2B1F] text-white rounded-2xl flex items-center justify-center border-4 border-white shadow-lg  hover:bg-[#E07A5F] transition-all"
+               >
                   <Camera size={16} />
                </button>
             </div>

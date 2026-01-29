@@ -190,16 +190,16 @@ export default function SupplierOrdersPage() {
                <div className="space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Informations Livraison</p>
                   <div className="space-y-1">
-                    <p className="text-sm font-black text-[#3D2B1F]">{selectedOrder.order.customerFirstName} {selectedOrder.order.customerLastName}</p>
-                    <p className="text-xs font-bold text-[#E07A5F] uppercase tracking-widest">{selectedOrder.order.customerPhoneNumber}</p>
-                    <p className="text-xs font-serif italic text-[#3D2B1F]/60">{selectedOrder.order.customerAddress}</p>
+                    <p className="text-sm font-black text-[#3D2B1F]">{selectedOrder.order.customerFirstName || 'Client'} {selectedOrder.order.customerLastName || ''}</p>
+                    <p className="text-xs font-bold text-[#E07A5F] uppercase tracking-widest">{selectedOrder.order.customerPhoneNumber || 'Pas de numéro'}</p>
+                    <p className="text-xs font-serif italic text-[#3D2B1F]/60">{selectedOrder.order.customerAddress || 'Adresse non renseignée'}</p>
                   </div>
                </div>
                <div className="space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Expédition</p>
                   <div className="space-y-1">
                     <p className="text-sm font-black text-[#E07A5F]">{selectedOrder.shippingPrice.toLocaleString()} CFA</p>
-                    <p className="text-xs font-bold text-[#3D2B1F]/60">Zone Standard</p>
+                    <p className="text-xs font-bold text-[#3D2B1F]/60">{selectedOrder.order.items?.[0]?.shippingZone || 'Zone Standard'}</p>
                   </div>
                </div>
             </div>
@@ -218,7 +218,11 @@ export default function SupplierOrdersPage() {
                        </div>
                        <div className="flex-1">
                           <p className="text-sm font-black text-[#3D2B1F]">{item.product.name}</p>
-                          <p className="text-[10px] font-bold text-[#3D2B1F]/30 uppercase tracking-widest">Qté: {item.quantity}</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            <span className="text-[9px] font-bold text-[#3D2B1F]/30 uppercase tracking-widest">Qté: {item.quantity}</span>
+                            {item.color && <span className="text-[9px] font-black text-[#E07A5F] uppercase tracking-widest">• {item.color}</span>}
+                            {item.size && <span className="text-[9px] font-black text-[#81B29A] uppercase tracking-widest">• {item.size}</span>}
+                          </div>
                        </div>
                        <div className="text-right">
                           <p className="text-sm font-black text-[#E07A5F]">{(item.price * item.quantity).toLocaleString()} CFA</p>

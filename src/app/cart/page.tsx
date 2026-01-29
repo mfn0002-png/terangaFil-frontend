@@ -103,7 +103,7 @@ export default function CartPage() {
                 {/* Items from this supplier */}
                 <div className="divide-y divide-sand">
                   {supplierItems.map((item) => (
-                    <div key={item.id} className="p-10 flex flex-col sm:flex-row items-center gap-10">
+                    <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.shippingZone}`} className="p-10 flex flex-col sm:flex-row items-center gap-10">
                       <div className="relative w-32 h-32 bg-sand/20 rounded-[30px] overflow-hidden flex-shrink-0 border border-sand">
                         <Image src={item.image} alt={item.name} fill className="object-cover p-4" />
                       </div>

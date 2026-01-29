@@ -90,5 +90,10 @@ export const supplierService = {
   updatePaymentSettings: async (data: { method: string, phoneNumber: string }) => {
     const res = await api.patch('/supplier/settings/payment', data);
     return res.data;
+  },
+  
+  updateBranding: async (data: any) => {
+    const res = await api.patch('/supplier/branding', data);
+    return res.data;
   }
 };
