@@ -92,8 +92,8 @@ export default function SupplierProductsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="animate-spin text-[#E07A5F]" size={40} />
-        <p className="text-[#3D2B1F]/40 font-black text-[10px] uppercase tracking-widest">Chargement de votre catalogue...</p>
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-foreground/40 font-black text-[10px] uppercase tracking-widest">Chargement de votre catalogue...</p>
       </div>
     );
   }
@@ -118,39 +118,39 @@ export default function SupplierProductsPage() {
       {/* Filters & Search */}
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 relative group">
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-[#3D2B1F]/20 group-focus-within:text-[#E07A5F] transition-colors" size={20} />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-foreground/20 group-focus-within:text-primary transition-colors" size={20} />
           <input 
             type="text"
             placeholder="Rechercher par nom ou catégorie..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-white border-2 border-[#F0E6D2]/30 rounded-3xl py-4 pl-16 pr-8 text-sm font-bold outline-none focus:border-[#E07A5F]/30 transition-all shadow-sm"
+            className="w-full bg-white border-2 border-border/30 rounded-3xl py-4 pl-16 pr-8 text-sm font-bold outline-none focus:border-primary/30 transition-all shadow-sm"
           />
         </div>
       </div>
 
       {/* Inventory Table */}
-      <div className="bg-white rounded-[50px] shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 overflow-hidden">
+      <div className="bg-white rounded-[50px] shadow-2xl shadow-foreground/5 border border-border/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-[#FDFCFB] border-b border-[#F0E6D2]/30">
-                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Produit</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Catégorie</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Prix</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Stock</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Statut</th>
-                <th className="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Actions</th>
+              <tr className="bg-background border-b border-border/30">
+                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Produit</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Catégorie</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Prix</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Stock</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Statut</th>
+                <th className="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F0E6D2]/10">
+            <tbody className="divide-y divide-border/10">
               {filteredProducts.map((p) => {
                 const isLowStock = p.stock < 10;
                 return (
-                  <tr key={p.id} className="group hover:bg-[#FDFCFB] transition-colors">
+                  <tr key={p.id} className="group hover:bg-background transition-colors">
                     <td className="px-10 py-6">
                       <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-3xl bg-[#FDFCFB] border border-[#F0E6D2]/30 overflow-hidden relative group-hover:shadow-lg transition-all duration-500">
+                        <div className="w-16 h-16 rounded-3xl bg-background border border-border/30 overflow-hidden relative group-hover:shadow-lg transition-all duration-500">
                           {p.imageUrl ? (
                              <Image src={p.imageUrl} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
                           ) : (
@@ -158,20 +158,20 @@ export default function SupplierProductsPage() {
                           )}
                         </div>
                         <div>
-                          <p className="text-base font-black text-[#3D2B1F] tracking-tight">{p.name}</p>
-                          <p className="text-[10px] font-bold text-[#E07A5F] uppercase tracking-widest italic">{p.material || 'Standard'}</p>
+                          <p className="text-base font-black text-foreground tracking-tight">{p.name}</p>
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-widest italic">{p.material || 'Standard'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-xs font-bold text-[#3D2B1F]/60 uppercase tracking-widest">{p.category}</span>
+                      <span className="text-xs font-bold text-foreground/60 uppercase tracking-widest">{p.category}</span>
                     </td>
                     <td className="px-8 py-6">
-                      <span className="text-base font-black text-[#3D2B1F] tracking-tighter">{p.price.toLocaleString()} CFA</span>
+                      <span className="text-base font-black text-foreground tracking-tighter">{p.price.toLocaleString()} CFA</span>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                         <span className={`text-sm font-black ${isLowStock ? 'text-red-500' : 'text-[#3D2B1F]'}`}>
+                         <span className={`text-sm font-black ${isLowStock ? 'text-red-500' : 'text-foreground'}`}>
                            {p.stock} pces
                          </span>
                          {isLowStock && <AlertCircle size={14} className="text-red-500" />}
@@ -179,8 +179,8 @@ export default function SupplierProductsPage() {
                     </td>
                     <td className="px-8 py-6">
                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${p.isActive ? 'bg-green-500 animate-pulse' : 'bg-[#3D2B1F]/20'}`} />
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${p.isActive ? 'text-green-600' : 'text-[#3D2B1F]/30'}`}>
+                          <div className={`w-2 h-2 rounded-full ${p.isActive ? 'bg-green-500 animate-pulse' : 'bg-foreground/20'}`} />
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${p.isActive ? 'text-green-600' : 'text-foreground/30'}`}>
                             {p.isActive ? 'Actif' : 'Masqué'}
                           </span>
                        </div>
@@ -227,7 +227,7 @@ export default function SupplierProductsPage() {
         {selectedProduct && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
             <div className="space-y-6">
-               <div className="aspect-square rounded-[40px] bg-[#FDFCFB] border border-[#F0E6D2]/30 overflow-hidden relative shadow-2xl">
+               <div className="aspect-square rounded-[40px] bg-background border border-border/30 overflow-hidden relative shadow-2xl">
                   {selectedProduct.imageUrl ? (
                      <Image src={selectedProduct.imageUrl} alt={selectedProduct.name} fill className="object-cover" />
                   ) : (
@@ -252,18 +252,18 @@ export default function SupplierProductsPage() {
                </div>
 
                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Description</p>
-                  <p className="text-sm font-bold text-[#3D2B1F]/60 leading-relaxed font-serif">{selectedProduct.description || 'Aucune description fournie.'}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Description</p>
+                  <p className="text-sm font-bold text-foreground/60 leading-relaxed font-serif">{selectedProduct.description || 'Aucune description fournie.'}</p>
                </div>
 
                <div className="grid grid-cols-2 gap-6">
-                  <div className="p-6 bg-[#FDFCFB] rounded-3xl border border-[#F0E6D2]/30">
-                     <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30 mb-1">Stock</p>
-                     <p className="text-xl font-black text-[#3D2B1F]">{selectedProduct.stock} unités</p>
+                  <div className="p-6 bg-background rounded-3xl border border-border/30">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30 mb-1">Stock</p>
+                     <p className="text-xl font-black text-foreground">{selectedProduct.stock} unités</p>
                   </div>
-                  <div className="p-6 bg-[#FDFCFB] rounded-3xl border border-[#F0E6D2]/30">
-                     <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30 mb-1">Matière</p>
-                     <p className="text-xl font-black text-[#3D2B1F]">{selectedProduct.material || 'N/A'}</p>
+                  <div className="p-6 bg-background rounded-3xl border border-border/30">
+                     <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30 mb-1">Matière</p>
+                     <p className="text-xl font-black text-foreground">{selectedProduct.material || 'N/A'}</p>
                   </div>
                </div>
 
@@ -295,7 +295,7 @@ export default function SupplierProductsPage() {
         maxWidth="md"
       >
         <div className="space-y-8">
-           <p className="text-sm font-bold text-[#3D2B1F]/60 leading-relaxed italic">Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible et retirera l'article de la boutique.</p>
+           <p className="text-sm font-bold text-foreground/60 leading-relaxed italic">Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible et retirera l'article de la boutique.</p>
            <div className="flex gap-4">
               <Button variant="ghost" className="flex-1" onClick={() => setProductToDelete(null)}>Annuler</Button>
               <Button variant="danger" className="flex-1" onClick={confirmDelete} loading={!!isDeleting}>Oui, supprimer</Button>

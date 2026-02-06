@@ -18,15 +18,15 @@ export const Input: React.FC<InputProps> = ({
   className = '', 
   ...props 
 }) => {
-  const baseClasses = "w-full bg-[#FDFCFB] border-2 border-[#F0E6D2]/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-[#E07A5F]/30 transition-all";
+  const baseClasses = "w-full bg-background border-2 border-border/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-primary/30 transition-all";
   const errorClasses = error ? "border-red-500 focus:border-red-500" : "";
 
   return (
     <div className="space-y-4 w-full">
-      {label && <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 px-2 block">{label}</label>}
+      {label && <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2 block">{label}</label>}
       <div className="relative group">
         {Icon && (
-          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-[#3D2B1F]/20 group-focus-within:text-[#E07A5F] transition-colors">
+          <div className="absolute left-6 top-1/2 -translate-y-1/2 text-foreground/20 group-focus-within:text-primary transition-colors">
             <Icon size={18} />
           </div>
         )}

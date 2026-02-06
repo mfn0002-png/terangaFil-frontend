@@ -167,8 +167,8 @@ export default function ProductFormPage() {
   if (fetching) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="animate-spin text-[#E07A5F]" size={40} />
-        <p className="text-[#3D2B1F]/40 font-black text-[10px] uppercase tracking-widest">Récupération des données...</p>
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-foreground/40 font-black text-[10px] uppercase tracking-widest">Récupération des données...</p>
       </div>
     );
   }
@@ -185,12 +185,12 @@ export default function ProductFormPage() {
       <form onSubmit={handleSubmit} className="space-y-12">
         
         {/* Section 1: Gallery */}
-        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 space-y-10">
+        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-foreground/5 border border-border/30 space-y-10">
            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#E07A5F]/10 rounded-xl flex items-center justify-center text-[#E07A5F]">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                  <Package size={20} />
               </div>
-              <h2 className="text-xl font-black text-[#3D2B1F] uppercase tracking-widest">1. Galerie Photos</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-widest">1. Galerie Photos</h2>
            </div>
 
            <input 
@@ -205,7 +205,7 @@ export default function ProductFormPage() {
            {previews.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                 {previews.map((src, i) => (
-                  <div key={i} className="relative aspect-square rounded-[40px] overflow-hidden border-4 border-[#F0E6D2] group">
+                  <div key={i} className="relative aspect-square rounded-[40px] overflow-hidden border-4 border-border group">
                     <Image src={src} alt="Preview" fill className="object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                        <button 
@@ -217,16 +217,16 @@ export default function ProductFormPage() {
                        </button>
                     </div>
                     {i === 0 && (
-                       <span className="absolute top-4 left-4 px-3 py-1 bg-[#3D2B1F] text-white text-[8px] font-black uppercase tracking-widest rounded-full">Principale</span>
+                       <span className="absolute top-4 left-4 px-3 py-1 bg-foreground text-white text-[8px] font-black uppercase tracking-widest rounded-full">Principale</span>
                     )}
                   </div>
                 ))}
                 <button 
                   type="button"
                   onClick={triggerUpload}
-                  className="aspect-square rounded-[40px] border-4 border-dashed border-[#F0E6D2] flex flex-col items-center justify-center text-[#3D2B1F]/20 hover:border-[#E07A5F]/30 hover:text-[#E07A5F] transition-all group"
+                  className="aspect-square rounded-[40px] border-4 border-dashed border-border flex flex-col items-center justify-center text-foreground/20 hover:border-primary/30 hover:text-primary transition-all group"
                 >
-                   <div className="w-16 h-16 bg-[#F0E6D2]/20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                   <div className="w-16 h-16 bg-border/20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Plus size={32} />
                    </div>
                    <span className="text-[10px] font-black uppercase tracking-widest mt-4">Ajouter</span>
@@ -235,26 +235,26 @@ export default function ProductFormPage() {
            ) : (
              <div 
               onClick={triggerUpload}
-              className="border-4 border-dashed border-[#F0E6D2]/30 rounded-[40px] p-20 flex flex-col items-center gap-8 group hover:border-[#E07A5F]/30 transition-all cursor-pointer"
+              className="border-4 border-dashed border-border/30 rounded-[40px] p-20 flex flex-col items-center gap-8 group hover:border-primary/30 transition-all cursor-pointer"
              >
-                <div className="w-20 h-20 bg-[#F0E6D2]/20 rounded-[30px] flex items-center justify-center text-[#E07A5F] group-hover:scale-110 transition-transform">
+                <div className="w-20 h-20 bg-border/20 rounded-[30px] flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                    <Upload size={32} />
                 </div>
                 <div className="text-center space-y-2">
-                   <p className="text-lg font-black text-[#3D2B1F]">Cliquez pour ajouter des photos</p>
-                   <p className="text-xs font-bold text-[#3D2B1F]/30 uppercase tracking-widest leading-relaxed">Plusieurs fichiers autorisés</p>
+                   <p className="text-lg font-black text-foreground">Cliquez pour ajouter des photos</p>
+                   <p className="text-xs font-bold text-foreground/30 uppercase tracking-widest leading-relaxed">Plusieurs fichiers autorisés</p>
                 </div>
              </div>
            )}
         </section>
 
         {/* Section 2: General Info */}
-        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 space-y-10">
+        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-foreground/5 border border-border/30 space-y-10">
            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#E07A5F]/10 rounded-xl flex items-center justify-center text-[#E07A5F]">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                  <Info size={20} />
               </div>
-              <h2 className="text-xl font-black text-[#3D2B1F] uppercase tracking-widest">2. Informations Générales</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-widest">2. Informations Générales</h2>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -266,11 +266,11 @@ export default function ProductFormPage() {
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
               <div className="space-y-4">
-                 <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 px-2">Catégorie</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Catégorie</label>
                  <select 
                     value={formData.category}
                     onChange={(e) => setFormData({...formData, category: e.target.value})}
-                    className="w-full bg-[#FDFCFB] border-2 border-[#F0E6D2]/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-[#E07A5F]/30 transition-all appearance-none"
+                    className="w-full bg-background border-2 border-border/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-primary/30 transition-all appearance-none"
                  >
                     <option>Fils</option>
                     <option>Crochets</option>
@@ -291,12 +291,12 @@ export default function ProductFormPage() {
         </section>
 
         {/* Section 3: Technical Specs */}
-        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 space-y-10">
+        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-foreground/5 border border-border/30 space-y-10">
            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#E07A5F]/10 rounded-xl flex items-center justify-center text-[#E07A5F]">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                  <HelpCircle size={20} />
               </div>
-              <h2 className="text-xl font-black text-[#3D2B1F] uppercase tracking-widest">3. Caractéristiques Techniques</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-widest">3. Caractéristiques Techniques</h2>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -322,7 +322,7 @@ export default function ProductFormPage() {
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-6">
-                 <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 px-2">Couleurs disponibles</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Couleurs disponibles</label>
                  <div className="flex flex-wrap gap-3">
                     {formData.colors.map(color => (
                        <Badge key={color} variant="secondary" className="pl-4 pr-2 py-2">
@@ -339,9 +339,9 @@ export default function ProductFormPage() {
                           value={newColor}
                           onChange={(e) => setNewColor(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('colors', newColor))}
-                          className="bg-[#F0E6D2]/20 border-2 border-dashed border-[#F0E6D2]/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-[#E07A5F] w-48"
+                          className="bg-border/20 border-2 border-dashed border-border/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-primary w-48"
                        />
-                       <button type="button" onClick={() => addTag('colors', newColor)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3D2B1F]/40 hover:text-[#E07A5F]">
+                       <button type="button" onClick={() => addTag('colors', newColor)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
                           <Plus size={14} />
                        </button>
                     </div>
@@ -349,7 +349,7 @@ export default function ProductFormPage() {
               </div>
 
               <div className="space-y-6">
-                 <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 px-2">Tailles disponibles</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Tailles disponibles</label>
                  <div className="flex flex-wrap gap-3">
                     {formData.sizes.map(size => (
                        <Badge key={size} variant="primary" className="pl-4 pr-2 py-2">
@@ -366,9 +366,9 @@ export default function ProductFormPage() {
                           value={newSize}
                           onChange={(e) => setNewSize(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('sizes', newSize))}
-                          className="bg-[#F0E6D2]/20 border-2 border-dashed border-[#F0E6D2]/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-[#E07A5F] w-48"
+                          className="bg-border/20 border-2 border-dashed border-border/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-primary w-48"
                        />
-                       <button type="button" onClick={() => addTag('sizes', newSize)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3D2B1F]/40 hover:text-[#E07A5F]">
+                       <button type="button" onClick={() => addTag('sizes', newSize)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
                           <Plus size={14} />
                        </button>
                     </div>
@@ -378,17 +378,17 @@ export default function ProductFormPage() {
         </section>
 
         {/* Section 4: Pricing & Stock */}
-        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 space-y-10">
+        <section className="bg-white rounded-[50px] p-12 shadow-2xl shadow-foreground/5 border border-border/30 space-y-10">
            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#E07A5F]/10 rounded-xl flex items-center justify-center text-[#E07A5F]">
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                  <TrendingUp size={20} />
               </div>
-              <h2 className="text-xl font-black text-[#3D2B1F] uppercase tracking-widest">4. Tarification et Stock</h2>
+              <h2 className="text-xl font-black text-foreground uppercase tracking-widest">4. Tarification et Stock</h2>
            </div>
 
            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                 <label className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/40 px-2">Prix de vente (FCFA)</label>
+                 <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Prix de vente (FCFA)</label>
                  <div className="relative">
                     <input 
                         type="number" 
@@ -396,9 +396,9 @@ export default function ProductFormPage() {
                         required
                         value={formData.price}
                         onChange={(e) => setFormData({...formData, price: Number(e.target.value)})}
-                        className="w-full bg-[#FDFCFB] border-2 border-[#F0E6D2]/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-[#E07A5F]/30 transition-all pr-16"
+                        className="w-full bg-background border-2 border-border/30 rounded-2xl py-5 px-8 text-sm font-bold outline-none focus:border-primary/30 transition-all pr-16"
                     />
-                    <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#3D2B1F]/20">FCFA</span>
+                    <span className="absolute right-8 top-1/2 -translate-y-1/2 text-[10px] font-black text-foreground/20">FCFA</span>
                  </div>
               </div>
               <Input 
@@ -414,7 +414,7 @@ export default function ProductFormPage() {
 
         {/* Actions */}
         <div className="flex flex-col md:flex-row items-center justify-end gap-6 pt-10">
-           <Link href="/dashboard/supplier/products" className="px-12 py-5 bg-white border-2 border-[#3D2B1F]/10 text-[#3D2B1F] rounded-full font-black text-xs uppercase tracking-widest hover:bg-[#FDFCFB] transition-all text-center">
+           <Link href="/dashboard/supplier/products" className="px-12 py-5 bg-white border-2 border-foreground/10 text-foreground rounded-full font-black text-xs uppercase tracking-widest hover:bg-background transition-all text-center">
               Annuler
            </Link>
            <Button 

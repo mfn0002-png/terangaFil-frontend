@@ -43,24 +43,24 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#3D2B1F]/40 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-foreground/40 backdrop-blur-sm animate-in fade-in duration-300">
       <div className={`bg-white rounded-[50px] w-full ${maxWidthClasses[maxWidth]} shadow-2xl p-10 relative animate-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar`}>
         <button 
           onClick={onClose}
-          className="absolute top-8 right-8 p-3 hover:bg-[#FDFCFB] rounded-2xl transition-all"
+          className="absolute top-8 right-8 p-3 hover:bg-background rounded-2xl transition-all"
         >
-          <X size={24} className="text-[#3D2B1F]/20" />
+          <X size={24} className="text-foreground/20" />
         </button>
 
         <div className="flex items-center gap-6 mb-8">
           {Icon && (
-            <div className="w-16 h-16 bg-[#3D2B1F] rounded-3xl flex items-center justify-center text-white shrink-0">
+            <div className="w-16 h-16 bg-foreground rounded-3xl flex items-center justify-center text-white shrink-0">
               <Icon size={32} />
             </div>
           )}
           <div>
-            <h3 className="text-3xl font-black text-[#3D2B1F] tracking-tighter italic">{title}</h3>
-            {subtitle && <p className="text-[10px] font-bold text-[#3D2B1F]/30 uppercase tracking-widest">{subtitle}</p>}
+            <h3 className="text-3xl font-black text-foreground tracking-tighter italic">{title}</h3>
+            {subtitle && <p className="text-[10px] font-bold text-foreground/30 uppercase tracking-widest">{subtitle}</p>}
           </div>
         </div>
 

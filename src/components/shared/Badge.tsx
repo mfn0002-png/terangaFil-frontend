@@ -16,8 +16,8 @@ export const Badge: React.FC<BadgeProps> = ({
   icon: Icon 
 }) => {
   const variants = {
-    primary: 'bg-[#E07A5F]/10 text-[#E07A5F]',
-    secondary: 'bg-[#3D2B1F]/10 text-[#3D2B1F]',
+    primary: 'bg-primary/10 text-primary',
+    secondary: 'bg-foreground/10 text-foreground',
     success: 'bg-green-50 text-green-600',
     warning: 'bg-orange-50 text-orange-600',
     danger: 'bg-red-50 text-red-600',

@@ -34,12 +34,12 @@ const ToastItem: React.FC<{ toast: ToastType; onClose: () => void }> = ({ toast,
   return (
     <div className={`pointer-events-auto flex items-center gap-4 px-6 py-4 rounded-[24px] border shadow-2xl backdrop-blur-md animate-in slide-in-from-right-10 duration-500 min-w-[300px] max-w-md ${colors[toast.type]}`}>
       <div className="shrink-0">{icons[toast.type]}</div>
-      <p className="flex-1 text-xs font-black text-[#3D2B1F] tracking-tight">{toast.message}</p>
+      <p className="flex-1 text-xs font-black text-foreground tracking-tight">{toast.message}</p>
       <button 
         onClick={onClose}
-        className="shrink-0 p-1 hover:bg-[#3D2B1F]/5 rounded-lg transition-colors"
+        className="shrink-0 p-1 hover:bg-foreground/5 rounded-lg transition-colors"
       >
-        <X size={14} className="text-[#3D2B1F]/20" />
+        <X size={14} className="text-foreground/20" />
       </button>
     </div>
   );

@@ -89,8 +89,8 @@ export default function SupplierOrdersPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <Loader2 className="animate-spin text-[#E07A5F]" size={40} />
-        <p className="text-[#3D2B1F]/40 font-black text-[10px] uppercase tracking-widest">Chargement de vos commandes...</p>
+        <Loader2 className="animate-spin text-primary" size={40} />
+        <p className="text-foreground/40 font-black text-[10px] uppercase tracking-widest">Chargement de vos commandes...</p>
       </div>
     );
   }
@@ -109,22 +109,22 @@ export default function SupplierOrdersPage() {
         title="Commandes" 
         subtitle="Suivez et préparez les commandes de vos clients"
         actions={
-          <div className="bg-[#F0E6D2]/20 px-6 py-3 rounded-2xl flex items-center gap-4">
-            <TrendingUp size={16} className="text-[#E07A5F]" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]">
-              CA Total: <span className="text-[#E07A5F]">{stats?.totalRevenue?.toLocaleString() || 0} CFA</span>
+          <div className="bg-border/20 px-6 py-3 rounded-2xl flex items-center gap-4">
+            <TrendingUp size={16} className="text-primary" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-foreground">
+              CA Total: <span className="text-primary">{stats?.totalRevenue?.toLocaleString() || 0} CFA</span>
             </span>
           </div>
         }
       />
 
       {/* Tabs */}
-      <div className="flex items-center gap-4 border-b border-[#F0E6D2]/30 pb-4 overflow-x-auto">
+      <div className="flex items-center gap-4 border-b border-border/30 pb-4 overflow-x-auto">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-[#3D2B1F] text-white shadow-lg' : 'text-[#3D2B1F]/40 hover:bg-[#F0E6D2]/10'}`}
+            className={`px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'bg-foreground text-white shadow-lg' : 'text-foreground/40 hover:bg-border/10'}`}
           >
             {tab.label} ({tab.count})
           </button>
@@ -132,31 +132,31 @@ export default function SupplierOrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-white rounded-[50px] shadow-2xl shadow-[#3D2B1F]/5 border border-[#F0E6D2]/30 overflow-hidden">
+      <div className="bg-white rounded-[50px] shadow-2xl shadow-foreground/5 border border-border/30 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-[#FDFCFB] border-b border-[#F0E6D2]/30">
-                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">ID & Date</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Client</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Montant</th>
-                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Statut</th>
-                <th className="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-[#3D2B1F]/20">Actions</th>
+              <tr className="bg-background border-b border-border/30">
+                <th className="px-10 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">ID & Date</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Client</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Montant</th>
+                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Statut</th>
+                <th className="px-10 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-foreground/20">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#F0E6D2]/10">
+            <tbody className="divide-y divide-border/10">
               {filteredOrders.map((o) => (
-                <tr key={o.id} className="group hover:bg-[#FDFCFB] transition-colors">
+                <tr key={o.id} className="group hover:bg-background transition-colors">
                   <td className="px-10 py-6">
-                    <p className="text-sm font-black text-[#3D2B1F]">#{o.id}</p>
-                    <p className="text-[10px] font-bold text-[#3D2B1F]/20">{new Date(o.order.createdAt).toLocaleDateString()}</p>
+                    <p className="text-sm font-black text-foreground">#{o.id}</p>
+                    <p className="text-[10px] font-bold text-foreground/20">{new Date(o.order.createdAt).toLocaleDateString()}</p>
                   </td>
                   <td className="px-8 py-6">
-                    <p className="text-sm font-black text-[#3D2B1F]">{o.order.customerFirstName} {o.order.customerLastName}</p>
-                    <p className="text-[10px] font-bold text-[#E07A5F] uppercase tracking-widest">{o.order.customerPhoneNumber}</p>
+                    <p className="text-sm font-black text-foreground">{o.order.customerFirstName} {o.order.customerLastName}</p>
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{o.order.customerPhoneNumber}</p>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-base font-black text-[#3D2B1F] tracking-tighter">{(o.supplierTotal || 0).toLocaleString()} CFA</span>
+                    <span className="text-base font-black text-foreground tracking-tighter">{(o.supplierTotal || 0).toLocaleString()} CFA</span>
                   </td>
                   <td className="px-8 py-6">
                      <Badge 
@@ -194,30 +194,30 @@ export default function SupplierOrdersPage() {
       >
         {selectedOrder && (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 gap-8 border-y border-[#F0E6D2]/30 py-8">
+            <div className="grid grid-cols-2 gap-8 border-y border-border/30 py-8">
                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Informations Livraison</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Informations Livraison</p>
                   <div className="space-y-1">
-                    <p className="text-sm font-black text-[#3D2B1F]">{selectedOrder.order.customerFirstName || 'Client'} {selectedOrder.order.customerLastName || ''}</p>
-                    <p className="text-xs font-bold text-[#E07A5F] uppercase tracking-widest">{selectedOrder.order.customerPhoneNumber || 'Pas de numéro'}</p>
-                    <p className="text-xs font-serif italic text-[#3D2B1F]/60">{selectedOrder.order.customerAddress || 'Adresse non renseignée'}</p>
+                    <p className="text-sm font-black text-foreground">{selectedOrder.order.customerFirstName || 'Client'} {selectedOrder.order.customerLastName || ''}</p>
+                    <p className="text-xs font-bold text-primary uppercase tracking-widest">{selectedOrder.order.customerPhoneNumber || 'Pas de numéro'}</p>
+                    <p className="text-xs font-serif italic text-foreground/60">{selectedOrder.order.customerAddress || 'Adresse non renseignée'}</p>
                   </div>
                </div>
                <div className="space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Expédition</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Expédition</p>
                   <div className="space-y-1">
-                    <p className="text-sm font-black text-[#E07A5F]">{selectedOrder.shippingPrice.toLocaleString()} CFA</p>
-                    <p className="text-xs font-bold text-[#3D2B1F]/60">{selectedOrder.order.items?.[0]?.shippingZone || 'Zone Standard'}</p>
+                    <p className="text-sm font-black text-primary">{selectedOrder.shippingPrice.toLocaleString()} CFA</p>
+                    <p className="text-xs font-bold text-foreground/60">{selectedOrder.order.items?.[0]?.shippingZone || 'Zone Standard'}</p>
                   </div>
                </div>
             </div>
 
             <div className="space-y-6">
-               <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Articles commandés</p>
+               <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Articles commandés</p>
                <div className="space-y-4 max-h-[30vh] overflow-y-auto pr-4 custom-scrollbar">
                   {selectedOrder.order.items?.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center gap-6 p-4 bg-[#FDFCFB] rounded-[30px] border border-[#F0E6D2]/20 group">
-                       <div className="w-16 h-16 rounded-2xl bg-white border border-[#F0E6D2]/30 overflow-hidden relative">
+                    <div key={i} className="flex items-center gap-6 p-4 bg-background rounded-[30px] border border-border/20 group">
+                       <div className="w-16 h-16 rounded-2xl bg-white border border-border/30 overflow-hidden relative">
                           {item.product.imageUrl ? (
                              <NextImage src={item.product.imageUrl} alt={item.product.name} fill className="object-cover" />
                           ) : (
@@ -225,16 +225,16 @@ export default function SupplierOrdersPage() {
                           )}
                        </div>
                        <div className="flex-1">
-                          <p className="text-sm font-black text-[#3D2B1F]">{item.product.name}</p>
+                          <p className="text-sm font-black text-foreground">{item.product.name}</p>
                           <div className="flex flex-wrap gap-2 mt-1">
-                            <span className="text-[9px] font-bold text-[#3D2B1F]/30 uppercase tracking-widest">Qté: {item.quantity}</span>
-                            {item.color && <span className="text-[9px] font-black text-[#E07A5F] uppercase tracking-widest">• {item.color}</span>}
+                            <span className="text-[9px] font-bold text-foreground/30 uppercase tracking-widest">Qté: {item.quantity}</span>
+                            {item.color && <span className="text-[9px] font-black text-primary uppercase tracking-widest">• {item.color}</span>}
                             {item.size && <span className="text-[9px] font-black text-[#81B29A] uppercase tracking-widest">• {item.size}</span>}
                           </div>
                        </div>
                        <div className="text-right">
-                          <p className="text-sm font-black text-[#E07A5F]">{(item.price * item.quantity).toLocaleString()} CFA</p>
-                          <p className="text-[9px] font-bold text-[#3D2B1F]/20">{item.price.toLocaleString()} CFA / unité</p>
+                          <p className="text-sm font-black text-primary">{(item.price * item.quantity).toLocaleString()} CFA</p>
+                          <p className="text-[9px] font-bold text-foreground/20">{item.price.toLocaleString()} CFA / unité</p>
                        </div>
                     </div>
                   ))}
@@ -243,13 +243,13 @@ export default function SupplierOrdersPage() {
 
             <div className="flex justify-end items-center gap-6 pt-4">
                <div className="text-right">
-                  <p className="text-sm font-black text-[#3D2B1F]">{(selectedOrder.supplierTotal || 0).toLocaleString()} CFA</p>
-                  <p className="text-[10px] font-bold text-[#3D2B1F]/20">Articles: {(selectedOrder.itemsSubtotal || 0).toLocaleString()} CFA • Livraison: {(selectedOrder.shippingPrice || 0).toLocaleString()} CFA</p>
+                  <p className="text-sm font-black text-foreground">{(selectedOrder.supplierTotal || 0).toLocaleString()} CFA</p>
+                  <p className="text-[10px] font-bold text-foreground/20">Articles: {(selectedOrder.itemsSubtotal || 0).toLocaleString()} CFA • Livraison: {(selectedOrder.shippingPrice || 0).toLocaleString()} CFA</p>
                </div>
             </div>
 
             <div className="space-y-6">
-               <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/30">Mettre à jour le statut</p>
+               <p className="text-[10px] font-black uppercase tracking-widest text-foreground/30">Mettre à jour le statut</p>
                <div className="grid grid-cols-3 gap-3">
                   {[
                     { id: 'PREPARING', label: 'Préparation', icon: Package },
@@ -262,8 +262,8 @@ export default function SupplierOrdersPage() {
                       disabled={updating || selectedOrder.status === s.id}
                       className={`flex flex-col items-center gap-2 p-4 rounded-3xl border-2 transition-all ${
                         selectedOrder.status === s.id 
-                          ? 'bg-[#3D2B1F] border-[#3D2B1F] text-white shadow-xl' 
-                          : 'bg-[#FDFCFB] border-[#F0E6D2]/30 text-[#3D2B1F]/40 hover:border-[#3D2B1F]/20'
+                          ? 'bg-foreground border-foreground text-white shadow-xl' 
+                          : 'bg-background border-border/30 text-foreground/40 hover:border-foreground/20'
                       } ${updating && 'opacity-50'}`}
                     >
                       {updating && selectedOrder.status !== s.id ? (
@@ -278,7 +278,7 @@ export default function SupplierOrdersPage() {
             </div>
 
             <div className="flex justify-between items-center pt-4">
-               <p className="text-[10px] font-black uppercase tracking-widest text-[#3D2B1F]/20 italic">ID Interne: {selectedOrder.id}</p>
+               <p className="text-[10px] font-black uppercase tracking-widest text-foreground/20 italic">ID Interne: {selectedOrder.id}</p>
                <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(null)}>
                  Fermer
                </Button>
