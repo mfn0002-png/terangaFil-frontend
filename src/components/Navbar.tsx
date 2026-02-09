@@ -3,6 +3,7 @@ import { Search, ShoppingCart, User, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
+import NotificationCenter from './shared/NotificationCenter';
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -55,6 +56,7 @@ export default function Navbar() {
                 )}
               </Link>
             )}
+            {mounted && user && <NotificationCenter />}
             <div className="hidden sm:flex items-center gap-1">
               {mounted && user ? (
                 <div className="flex items-center gap-4">

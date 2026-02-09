@@ -20,6 +20,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
 import { ConfirmLogoutModal } from '@/components/shared/ConfirmLogoutModal';
+import NotificationCenter from '@/components/shared/NotificationCenter';
 
 export default function SupplierLayout({
   children,
@@ -165,10 +166,7 @@ export default function SupplierLayout({
                 </button>
               </Link>
             )}
-            <button className="relative p-3 bg-border/20 text-foreground rounded-2xl hover:bg-border/40 transition-all">
-               <Bell size={20} />
-               <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-white" />
-            </button>
+            <NotificationCenter />
             <div className="h-10 w-px bg-border/30" />
             <div className="flex items-center gap-4">
                <div className="flex flex-col items-end">

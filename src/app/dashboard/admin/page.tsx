@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   TrendingUp, 
   Users, 
@@ -38,7 +39,7 @@ export default function AdminOverview() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#E07A5F]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -53,17 +54,17 @@ export default function AdminOverview() {
       color: 'bg-leaf/10 text-leaf'
     },
     {
-      title: 'Total Commissions (10%)',
+      title: 'Total Commissions',
       value: `${stats?.totalCommissions?.toLocaleString()} FCFA`,
       change: '+12%',
       isPositive: true,
       icon: Banknote,
-      color: 'bg-[#E07A5F]/10 text-[#E07A5F]'
+      color: 'bg-primary/10 text-primary'
     },
     {
-      title: 'Nouveaux Fournisseurs',
+      title: 'Fournisseurs en attente',
       value: stats?.pendingSuppliersCount || 0,
-      subtitle: 'En attente de validation',
+      subtitle: 'Validation requise',
       isUrgent: (stats?.pendingSuppliersCount || 0) > 0,
       icon: Store,
       color: 'bg-blue-50 text-blue-600'
@@ -74,7 +75,7 @@ export default function AdminOverview() {
     <div className="space-y-10 animate-in fade-in duration-500">
       
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {statCards.map((card, idx) => (
           <div key={idx} className="bg-white p-8 rounded-[40px] shadow-xl shadow-foreground/5 border border-border/30 group hover:scale-[1.02] transition-all">
             <div className="flex items-start justify-between mb-6">
@@ -92,7 +93,7 @@ export default function AdminOverview() {
               <p className="text-[10px] font-black text-foreground/30 uppercase tracking-[0.2em] mb-1">{card.title}</p>
               <h3 className="text-3xl font-black text-foreground tracking-tighter">{card.value}</h3>
               {card.subtitle && (
-                <p className={`mt-2 text-[10px] font-bold uppercase tracking-widest ${card.isUrgent ? 'text-[#E07A5F]' : 'text-foreground/40'}`}>
+                <p className={`mt-2 text-[10px] font-bold uppercase tracking-widest ${card.isUrgent ? 'text-primary' : 'text-foreground/40'}`}>
                   {card.subtitle}
                 </p>
               )}
@@ -101,16 +102,16 @@ export default function AdminOverview() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         
         {/* Recent Transactions Table */}
-        <div className="lg:col-span-2 bg-white rounded-[40px] shadow-xl shadow-foreground/5 border border-border/30 overflow-hidden">
-          <div className="p-8 border-b border-border/30 flex items-center justify-between">
+        <div className="xl:col-span-2 bg-white rounded-[40px] shadow-xl shadow-foreground/5 border border-border/30 overflow-hidden">
+          <div className="p-8 border-b border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-xl font-black text-foreground tracking-tight">Dernières Transactions</h3>
               <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest">Flux financier en temps réel</p>
             </div>
-            <button className="text-[10px] font-black text-[#E07A5F] border-2 border-[#E07A5F]/10 px-4 py-2 rounded-xl hover:bg-[#E07A5F] hover:text-white transition-all uppercase tracking-widest">
+            <button className="text-[10px] font-black text-primary border-2 border-primary/10 px-6 py-3 rounded-xl hover:bg-primary hover:text-white transition-all uppercase tracking-widest self-start sm:self-auto">
               Exporter
             </button>
           </div>
@@ -126,13 +127,13 @@ export default function AdminOverview() {
               </thead>
               <tbody className="divide-y divide-border/10">
                 {stats?.recentTransactions?.map((tx: any) => (
-                  <tr key={tx.id} className="hover:bg-[#FDFCFB]/50 transition-colors">
+                  <tr key={tx.id} className="hover:bg-background/30 transition-colors">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-sand/20 flex items-center justify-center text-chocolate">
+                        <div className="w-8 h-8 rounded-lg bg-sand/20 flex items-center justify-center text-foreground/40">
                           <Clock size={14} />
                         </div>
-                        <span className="text-xs font-black text-foreground uppercase tracking-wider">#{tx.id.toString().padStart(6, '0')}</span>
+                        <span className="text-xs font-black text-foreground uppercase tracking-wider">#{tx.id.toString().substring(0, 8)}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
@@ -156,19 +157,21 @@ export default function AdminOverview() {
         {/* Quick Actions / Suppliers Validation */}
         <div className="bg-white rounded-[40px] shadow-xl shadow-foreground/5 border border-border/30 p-8 flex flex-col">
           <h3 className="text-xl font-black text-foreground tracking-tight mb-2">Actions Prioritaires</h3>
-          <p className="text-[10px] font-bold text-foreground/40 uppercase tracking-widest mb-8 text-leaf">Validation requise</p>
+          <p className="text-[10px] font-bold text-leaf uppercase tracking-widest mb-8">Validation requise</p>
           
           <div className="space-y-6 flex-1">
             {stats?.pendingSuppliersCount > 0 ? (
-              <div className="bg-[#E07A5F]/5 border-2 border-dashed border-[#E07A5F]/20 rounded-3xl p-6 flex flex-col items-center text-center gap-4">
-                 <div className="w-16 h-16 bg-[#E07A5F] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#E07A5F]/20">
+              <div className="bg-primary/5 border-2 border-dashed border-primary/20 rounded-3xl p-8 flex flex-col items-center text-center gap-4">
+                 <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
                     <Users size={30} />
                  </div>
-                 <h4 className="text-sm font-black text-[#3D2B1F]">{stats.pendingSuppliersCount} Nouveau(x) Fournisseur(s)</h4>
-                 <p className="text-[10px] font-bold text-foreground/40 italic">Des entrepreneurs talentueux attendent votre feu vert pour rejoindre Teranga Fil.</p>
-                 <button className="w-full bg-[#3D2B1F] text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#E07A5F] transition-all">
-                    Examiner les Dossiers
-                 </button>
+                 <h4 className="text-sm font-black text-foreground">{stats.pendingSuppliersCount} Nouveau(x) Fournisseur(s)</h4>
+                 <p className="text-[10px] font-bold text-foreground/40 italic">Des entrepreneurs attendent votre validation pour rejoindre Teranga Fil.</p>
+                 <Link href="/dashboard/admin/suppliers" className="w-full">
+                   <button className="w-full bg-foreground text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary transition-all">
+                      Examiner les Dossiers
+                   </button>
+                 </Link>
               </div>
             ) : (
               <div className="bg-leaf/5 border-2 border-dashed border-leaf/20 rounded-3xl p-8 flex flex-col items-center text-center gap-4">
@@ -182,10 +185,12 @@ export default function AdminOverview() {
           </div>
           
           <div className="mt-8 pt-6 border-t border-border/30">
-             <button className="w-full flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-[#3D2B1F]/40 hover:text-[#3D2B1F] transition-all">
-                Voir toutes les boutiques
-                <ArrowUpRight size={18} />
-             </button>
+            <Link href="/dashboard/admin/suppliers">
+               <button className="w-full flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-foreground/40 hover:text-foreground transition-all">
+                  Voir toutes les boutiques
+                  <ArrowUpRight size={18} />
+               </button>
+            </Link>
           </div>
         </div>
 
