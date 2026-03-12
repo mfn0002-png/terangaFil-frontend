@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
@@ -16,7 +16,7 @@ import {
 import { useCartStore } from '@/stores/cartStore';
 import { catalogService, Product } from '@/services/catalogService';
 
-export default function CatalogPage() {
+function CatalogContent() {
   const searchParams = useSearchParams();
   const { addItem } = useCartStore();
   
@@ -200,6 +200,18 @@ export default function CatalogPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-sand/10 min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-terracotta animate-spin" />
+      </div>
+    }>
+      <CatalogContent />
+    </Suspense>
   );
 }
 
