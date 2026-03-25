@@ -18,13 +18,17 @@ import {
 import { catalogService, Product } from '@/services/catalogService';
 import { useCartStore } from '@/stores/cartStore';
 import { toast } from '@/stores/useToastStore';
+import { useFavoriteStore } from '@/stores/favoriteStore';
 
 interface ProductDetailsContentProps {
   productId: number;
 }
 
 export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps) => {
-  const { addItem } = useCartStore();
+  const { addItem, items: cartItems } = useCartStore();
+  const { toggleFavorite, favoriteIds, fetchFavorites, initialized, togglingIds } = useFavoriteStore();
+  const isFavorite = favoriteIds.has(productId);
+  const isToggling = togglingIds.has(productId);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -39,16 +43,21 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
       setLoading(true);
       try {
         const data = await catalogService.getProductById(productId);
-        setProduct(data);
-        if (data.colors && data.colors.length > 0) setSelectedColor(data.colors[0]);
+        if (data.colors && data.colors.length > 0) {
+          const cleanedColors = data.colors.map(c => c.trim().toLowerCase());
+          setProduct({ ...data, colors: cleanedColors });
+          setSelectedColor(cleanedColors[0]);
+        } else {
+          setProduct(data);
+        }
         if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
         
         // Fetch similar products
-        const products = await catalogService.getProducts({ 
+        const response = await catalogService.getProducts({ 
           category: data.category,
           supplierId: data.supplier.id 
         });
-        setSimilarProducts(products.filter(p => p.id !== data.id).slice(0, 4));
+        setSimilarProducts(response.data.filter((p: Product) => p.id !== data.id).slice(0, 4));
       } catch (error) {
         toast.error('Erreur lors du chargement du produit');
       } finally {
@@ -57,7 +66,10 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
     };
 
     fetchProductDetails();
-  }, [productId]);
+    if (!initialized) {
+      fetchFavorites();
+    }
+  }, [productId, initialized, fetchFavorites]);
 
   const handleAddToCart = async () => {
     if (!product) return;
@@ -101,7 +113,32 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
     );
   }
 
-  const images = product.images && product.images.length > 0 ? product.images : [product.imageUrl];
+  const colorMap: Record<string, string> = {
+    'blanc': '#FFFFFF',
+    'noir': '#000000',
+    'rouge': '#FF0000',
+    'bleu': '#0000FF',
+    'vert': '#008000',
+    'jaune': '#FFFF00',
+    'rose': '#FFC0CB',
+    'gris': '#808080',
+    'marron': '#8B4513',
+    'orange': '#FFA500',
+    'violet': '#EE82EE',
+    'chocolat': '#7B3F00',
+    'terracotta': '#E2725B',
+    'or': '#FFD700',
+    'feuille': '#3A5A40',
+    'sable': '#E9EDC9',
+    'indigo': '#4B0082'
+  };
+
+  const getColorValue = (color: string) => colorMap[color.trim().toLowerCase()] || color;
+
+  // Combine imageUrl and images array, removing duplicates and ensuring imageUrl is first
+  const images = Array.from(new Set([product.imageUrl, ...(product.images || [])])).filter(Boolean);
+
+  const isInCart = cartItems.some(item => item.id === product.id);
 
   return (
     <div className="space-y-12">
@@ -175,7 +212,7 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
                       key={color}
                       onClick={() => setSelectedColor(color)}
                       className={`w-10 h-10 rounded-full border-4 transition-all ${selectedColor === color ? 'border-terracotta scale-110 shadow-lg' : 'border-sand hover:border-chocolate/20'}`}
-                      style={{ backgroundColor: color }}
+                      style={{ backgroundColor: getColorValue(color) }}
                     />
                   ))}
                 </div>
@@ -224,11 +261,19 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
               disabled={isAdding || product.stock === 0}
               className="flex-1 bg-terracotta text-white py-6 rounded-[30px] font-black text-sm uppercase tracking-widest hover:bg-chocolate transition-all shadow-2xl shadow-terracotta/20 flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95"
             >
-              {isAdding ? <Loader2 size={24} className="animate-spin" /> : <ShoppingCart size={24} />}
-              {isAdding ? 'Ajout...' : 'Ajouter au panier'}
+              {isAdding ? <Loader2 size={24} className="animate-spin" /> : isInCart ? <Check size={24} /> : <ShoppingCart size={24} />}
+              {isAdding ? 'Ajout...' : isInCart ? 'Déjà au panier' : 'Ajouter au panier'}
             </button>
-            <button className="w-20 h-[72px] bg-white border-2 border-sand rounded-[30px] flex items-center justify-center text-chocolate hover:text-red-500 hover:border-red-500 transition-all active:scale-95 group">
-              <Heart size={24} className="group-hover:fill-red-500" />
+            <button 
+              onClick={() => toggleFavorite(product.id)}
+              disabled={isToggling}
+              className={`w-20 h-[72px] bg-white border-2 rounded-[30px] flex items-center justify-center transition-all active:scale-95 group ${isFavorite ? 'border-red-500 text-red-500' : 'border-sand text-chocolate hover:text-red-500 hover:border-red-500'} ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isToggling ? (
+                <Loader2 size={24} className="animate-spin text-terracotta" />
+              ) : (
+                <Heart size={24} className={isFavorite ? 'fill-red-500' : 'group-hover:fill-red-500'} />
+              )}
             </button>
           </div>
 
@@ -260,9 +305,15 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {similarProducts.map((p) => (
                 <Link href={`/public/product/${p.id}`} key={p.id} className="group flex flex-col gap-4">
-                   <div className="relative aspect-square rounded-[35px] overflow-hidden bg-white border border-sand shadow-lg group-hover:shadow-2xl transition-all duration-500">
-                      <Image src={p.imageUrl} alt={p.name} fill className="object-cover group-hover:scale-110 transition-all duration-700" />
-                   </div>
+                    <div className="relative aspect-square rounded-[35px] overflow-hidden bg-white border border-sand shadow-lg group-hover:shadow-2xl transition-all duration-500">
+                      <Image src={p.imageUrl || '/images/placeholder.png'} alt={p.name} fill className="object-cover group-hover:scale-110 transition-all duration-700" />
+                       {cartItems.filter(item => item.id === p.id).length > 0 && (
+                         <div className="absolute top-4 left-4 bg-leaf text-white px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1 z-10 shadow-lg">
+                           <ShoppingCart size={8} />
+                           {cartItems.filter(item => item.id === p.id).reduce((sum, i) => sum + i.quantity, 0)}
+                         </div>
+                       )}
+                    </div>
                    <div className="px-2">
                        <h4 className="font-bold text-chocolate text-sm line-clamp-1">{p.name}</h4>
                        <p className="font-black text-terracotta text-lg tracking-tighter">{p.price.toLocaleString()} CFA</p>

@@ -2,14 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Heart, ShoppingCart, ChevronRight, Store, Loader2 } from 'lucide-react';
+import { Search, Heart, ShoppingCart, ChevronRight, Store, Loader2, Check } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useState, useEffect } from 'react';
 import { catalogService, Product, Supplier } from '@/services/catalogService';
 
+import { ProductCard } from '@/components/shared/ProductCard';
+
 export default function Home() {
-  const { addItem } = useCartStore();
+  const { items: cartItems } = useCartStore();
   const { user } = useAuthStore();
 
   const categories = [
@@ -26,12 +28,12 @@ export default function Home() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsData, suppliersData] = await Promise.all([
-          catalogService.getProducts(),
+        const [productsResponse, suppliersResponse] = await Promise.all([
+          catalogService.getProducts({ limit: 8 }),
           catalogService.getSuppliers()
         ]);
-        setProducts(productsData.slice(0, 8)); // Take first 8 featured products
-        setSuppliers(suppliersData);
+        setProducts(productsResponse.data);
+        setSuppliers(suppliersResponse.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -43,7 +45,7 @@ export default function Home() {
 
   return (
     <main className="space-y-24 pb-32">
-      
+      {/* ... Hero and Categories sections remain unchanged ... */}
       <section className="container mx-auto px-4 pt-12">
         <div className="relative h-[500px] md:h-[600px] w-full rounded-[60px] overflow-hidden group shadow-2xl shadow-chocolate/10 border border-sand">
           <Image 
@@ -143,36 +145,7 @@ export default function Home() {
                <div key={i} className="h-96 rounded-[40px] bg-sand/10 animate-pulse border border-sand/20" />
              ))
           ) : products.map((p) => (
-            <Link 
-              key={p.id} 
-              href={`/public/product/${p.id}`}
-              className="group flex flex-col bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-sand cursor-pointer"
-            >
-              <div className="relative h-72 w-full bg-sand/5 overflow-hidden">
-                <Image src={p.imageUrl || '/images/placeholder.png'} alt={p.name} fill className="object-cover p-0 transition-transform duration-700 group-hover:scale-110" />
-                <button 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    // TODO: Toggle favorite
-                  }}
-                  className="absolute top-6 right-6 p-4 bg-white/80 backdrop-blur-md rounded-full text-chocolate/20 hover:text-red-500 hover:scale-110 transition-all shadow-lg border border-white/50"
-                >
-                  <Heart size={20} />
-                </button>
-              </div>
-              <div className="p-8 flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                   <div className="w-2 h-2 rounded-full bg-terracotta animate-pulse"></div>
-                   <span className="text-[10px] font-black text-terracotta uppercase tracking-[0.2em]">
-                    {p.supplier.shopName}
-                  </span>
-                </div>
-                <h4 className="font-bold text-chocolate text-xl tracking-tight leading-tight line-clamp-2">{p.name}</h4>
-                <div className="mt-auto pt-6 border-t border-sand">
-                  <span className="text-xl font-black text-chocolate tracking-tighter">{p.price.toLocaleString()} CFA</span>
-                </div>
-              </div>
-            </Link>
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </section>

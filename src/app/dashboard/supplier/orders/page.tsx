@@ -19,10 +19,13 @@ import { Modal } from '@/components/shared/Modal';
 import { Button } from '@/components/shared/Button';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { toast } from '@/stores/useToastStore';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/shared/Pagination';
 
 type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 export default function SupplierOrdersPage() {
+  const { page, onPageChange, handleResponse, meta } = usePagination(10);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('ALL');
@@ -38,16 +41,18 @@ export default function SupplierOrdersPage() {
 
   useEffect(() => {
     fetchOrdersAndStats();
-  }, []);
+  }, [page]);
 
   const fetchOrdersAndStats = async () => {
     try {
+      setLoading(true);
       const [ordersData, statsData] = await Promise.all([
-        supplierService.getOrders(),
+        supplierService.getOrders(page, 10),
         supplierService.getStats()
       ]);
-      const processed = (ordersData || []).map(computeTotals);
+      const processed = (ordersData.data || []).map(computeTotals);
       setOrders(processed);
+      handleResponse(ordersData.meta);
       setStats(statsData.overview);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -62,9 +67,10 @@ export default function SupplierOrdersPage() {
     try {
       await supplierService.updateOrderStatus(id, status);
       // Refresh
-      const ordersRaw = await supplierService.getOrders();
-      const updated = (ordersRaw || []).map(computeTotals);
+      const ordersRaw = await supplierService.getOrders(page, 10);
+      const updated = (ordersRaw.data || []).map(computeTotals);
       setOrders(updated);
+      handleResponse(ordersRaw.meta);
       const newSelected = updated.find((o: any) => o.id === id);
       setSelectedOrder(newSelected);
       // Update stats
@@ -181,6 +187,15 @@ export default function SupplierOrdersPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination Controls */}
+        <div className="p-8 border-t border-border/10">
+          <Pagination 
+            currentPage={page}
+            totalPages={meta.totalPages}
+            onPageChange={onPageChange}
+          />
+        </div>
       </div>
 
       {/* Modal Détails Commande */}
@@ -219,7 +234,7 @@ export default function SupplierOrdersPage() {
                     <div key={i} className="flex items-center gap-6 p-4 bg-background rounded-[30px] border border-border/20 group">
                        <div className="w-16 h-16 rounded-2xl bg-white border border-border/30 overflow-hidden relative">
                           {item.product.imageUrl ? (
-                             <NextImage src={item.product.imageUrl} alt={item.product.name} fill className="object-cover" />
+                             <NextImage src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className="object-cover" />
                           ) : (
                              <span className="absolute inset-0 flex items-center justify-center text-xl">🧶</span>
                           )}

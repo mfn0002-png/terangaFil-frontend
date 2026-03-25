@@ -8,20 +8,26 @@ import {
   MapPin, 
   Star, 
   ArrowRight,
-  Loader2
+  Loader2,
+  Store
 } from 'lucide-react';
 import { catalogService, Supplier } from '@/services/catalogService';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/shared/Pagination';
 
 export default function SuppliersPage() {
+  const { page, onPageChange, handleResponse, meta } = usePagination(9);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchSuppliers = async () => {
+      setIsLoading(true);
       try {
-        const data = await catalogService.getSuppliers();
-        setSuppliers(data);
+        const response = await catalogService.getSuppliers(page, 9);
+        setSuppliers(response.data);
+        handleResponse(response.meta);
       } catch (error) {
         console.error('Error fetching suppliers:', error);
       } finally {
@@ -29,7 +35,7 @@ export default function SuppliersPage() {
       }
     };
     fetchSuppliers();
-  }, []);
+  }, [page, handleResponse]);
 
   const filteredSuppliers = suppliers.filter(s => 
     s.shopName.toLowerCase().includes(search.toLowerCase()) || 
@@ -68,61 +74,80 @@ export default function SuppliersPage() {
 
         {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {[1,2,3].map(i => (
-                    <div key={i} className="h-64 bg-sand/10 rounded-[40px] animate-pulse" />
+                {[1,2,3,4,5,6].map(i => (
+                    <div key={i} className="h-96 rounded-[40px] bg-sand/10 animate-pulse border border-sand/20" />
                 ))}
             </div>
-        ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredSuppliers.map((supplier) => (
-                <Link 
-                    key={supplier.id} 
-                    href={`/public/supplier/${supplier.id}`}
-                    className="group bg-white rounded-[40px] overflow-hidden border border-sand hover:shadow-2xl hover:border-terracotta/30 transition-all duration-300 flex flex-col"
-                >
-                    <div className="h-40 relative bg-chocolate/5 overflow-hidden">
-                        {supplier.bannerUrl ? (
-                            <Image src={supplier.bannerUrl} alt="Banner" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                        ) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-chocolate/5 text-6xl font-black uppercase tracking-tighter">Teranga</div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        
-                        <div className="absolute -bottom-10 left-8">
-                            <div className="w-24 h-24 rounded-full border-[6px] border-white overflow-hidden bg-white shadow-lg relative z-10">
-                                {supplier.logoUrl ? (
-                                    <Image src={supplier.logoUrl} alt={supplier.shopName} fill className="object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-2xl">🏪</div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="pt-16 px-8 pb-8 flex-1 flex flex-col">
-                        <div className="mb-4">
-                            <h3 className="text-2xl font-black text-chocolate tracking-tight group-hover:text-terracotta transition-colors">{supplier.shopName}</h3>
-                            <div className="flex items-center gap-4 mt-2">
-                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-chocolate/40">
-                                    <MapPin size={12} /> Sénégal
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-chocolate/40">
-                                    <Star size={12} className="text-gold fill-gold" /> 4.8
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <p className="text-chocolate/60 text-sm font-medium line-clamp-2 mb-8 flex-1">
-                            {supplier.description || "Une magnifique boutique proposant des produits authentiques."}
-                        </p>
-
-                        <div className="flex items-center justify-between text-terracotta font-black text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                            Visiter la boutique <ArrowRight size={16} />
-                        </div>
-                    </div>
-                </Link>
-            ))}
+        ) : filteredSuppliers.length === 0 ? (
+            <div className="text-center py-24 bg-white rounded-[50px] border border-sand shadow-sm">
+                <div className="mb-6 inline-flex items-center justify-center w-20 h-20 bg-sand/20 rounded-full text-chocolate/20">
+                  <Store size={32} />
+                </div>
+                <p className="text-chocolate/60 font-bold text-lg mb-2">Aucun artisan trouvé</p>
+                <p className="text-chocolate/30 text-sm max-w-xs mx-auto">Élargissez votre recherche ou réessayez plus tard.</p>
             </div>
+        ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredSuppliers.map((supplier) => (
+                    <Link 
+                        key={supplier.id} 
+                        href={`/public/supplier/${supplier.id}`}
+                        className="group bg-white rounded-[40px] overflow-hidden border border-sand hover:shadow-2xl hover:border-terracotta/30 transition-all duration-300 flex flex-col h-full"
+                    >
+                        <div className="h-40 relative bg-chocolate/5 overflow-hidden">
+                            {supplier.bannerUrl ? (
+                                <Image src={supplier.bannerUrl} alt="Banner" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-chocolate/5 text-6xl font-black uppercase tracking-tighter">Teranga</div>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                            
+                            <div className="absolute -bottom-10 left-8">
+                                <div className="w-24 h-24 rounded-full border-[6px] border-white overflow-hidden bg-white shadow-lg relative z-10">
+                                    {supplier.logoUrl ? (
+                                        <Image src={supplier.logoUrl} alt={supplier.shopName} fill className="object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-2xl">🏪</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-16 px-8 pb-8 flex-1 flex flex-col">
+                            <div className="mb-4">
+                                <h3 className="text-2xl font-black text-chocolate tracking-tight group-hover:text-terracotta transition-colors">{supplier.shopName}</h3>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-chocolate/40">
+                                        <MapPin size={12} /> Sénégal
+                                    </div>
+                                    <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-chocolate/40">
+                                        <Star size={12} className="text-gold fill-gold" /> 4.8
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p className="text-chocolate/60 text-sm font-medium line-clamp-2 mb-8 flex-1">
+                                {supplier.description || "Une magnifique boutique proposant des produits authentiques."}
+                            </p>
+
+                            <div className="flex items-center justify-between text-terracotta font-black text-xs uppercase tracking-widest group-hover:translate-x-2 transition-transform pt-4 border-t border-sand/30">
+                                Visiter la boutique <ArrowRight size={16} />
+                            </div>
+                        </div>
+                    </Link>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              <div className="mt-16">
+                <Pagination 
+                  currentPage={page}
+                  totalPages={meta.totalPages}
+                  onPageChange={onPageChange}
+                />
+              </div>
+            </>
         )}
 
       </div>

@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useRouter } from 'next/navigation';
 import authService from '@/services/authService';
 import { favoriteService, Favorite } from '@/services/favoriteService';
+import { useFavoriteStore } from '@/stores/favoriteStore';
 import api from '@/lib/api';
 import { Input } from '@/components/shared/Input';
 import { Button } from '@/components/shared/Button';
@@ -37,7 +38,7 @@ export const UnifiedProfile = () => {
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'SECURITY' | 'NOTIFICATIONS' | 'SHOP' | 'FAVORITES'>('PROFILE');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const { favorites, fetchFavorites, toggleFavorite, togglingIds } = useFavoriteStore();
   const [currentSubscription, setCurrentSubscription] = useState<any>(null);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -72,9 +73,9 @@ export const UnifiedProfile = () => {
 
     const fetchData = async () => {
       try {
-        const [userData, favData, subData] = await Promise.all([
+        const [userData, _, subData] = await Promise.all([
           authService.getMe(),
-          user?.role === 'CLIENT' ? favoriteService.getFavorites() : Promise.resolve([]),
+          user?.role === 'CLIENT' ? fetchFavorites() : Promise.resolve(),
           user?.role === 'SUPPLIER' ? api.get('/premium/my-subscription').catch(() => ({ data: null })) : Promise.resolve({ data: null })
         ]);
 
@@ -89,8 +90,6 @@ export const UnifiedProfile = () => {
           bannerUrl: userData.supplier?.bannerUrl || '',
           address: 'Dakar, Sénégal',
         });
-
-        if (favData) setFavorites(favData);
         if (subData?.data) setCurrentSubscription(subData.data);
       } catch (error) {
         console.error('Error fetching profile data:', error);
@@ -365,21 +364,39 @@ export const UnifiedProfile = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                         {favorites.map((fav) => (
-                           <Link key={fav.id} href={`/public/product/${fav.product.id}`} className="group bg-background rounded-3xl p-4 border border-border/30 hover:shadow-xl transition-all">
-                              <div className="aspect-square relative rounded-2xl overflow-hidden mb-4">
-                                 <Image src={fav.product.imageUrl || '/images/placeholder.png'} alt={fav.product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                              </div>
-                              <h4 className="font-black text-foreground text-sm tracking-tight truncate">{fav.product.name}</h4>
-                              <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{fav.product.supplier.shopName}</p>
-                              <div className="mt-4 flex items-center justify-between">
-                                 <span className="text-sm font-black text-foreground">{fav.product.price.toLocaleString()} CFA</span>
-                                 <div className="p-2 bg-white rounded-xl shadow-sm group-hover:bg-foreground group-hover:text-white transition-colors">
-                                    <ExternalLink size={14} />
-                                 </div>
-                              </div>
-                           </Link>
-                         ))}
+                          {favorites.map((fav) => (
+                            <div key={fav.id} className="relative group bg-background rounded-3xl p-4 border border-border/30 hover:shadow-xl transition-all">
+                               <Link href={`/public/product/${fav.product.id}`}>
+                                  <div className="aspect-square relative rounded-2xl overflow-hidden mb-4">
+                                     <Image src={fav.product.imageUrl || '/images/placeholder.png'} alt={fav.product.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                                  </div>
+                                  <h4 className="font-black text-foreground text-sm tracking-tight truncate">{fav.product.name}</h4>
+                                  <p className="text-[10px] font-bold text-primary uppercase tracking-widest">{fav.product.supplier.shopName}</p>
+                                  <div className="mt-4 flex items-center justify-between">
+                                     <span className="text-sm font-black text-foreground">{fav.product.price.toLocaleString()} CFA</span>
+                                     <div className="p-2 bg-white rounded-xl shadow-sm group-hover:bg-foreground group-hover:text-white transition-colors">
+                                        <ExternalLink size={14} />
+                                     </div>
+                                  </div>
+                               </Link>
+                               <button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleFavorite(fav.product.id);
+                                  }}
+                                  disabled={togglingIds.has(fav.product.id)}
+                                  className={`absolute top-6 right-6 p-2.5 bg-white/90 backdrop-blur-md rounded-xl text-red-500 shadow-lg transition-all z-10 hover:scale-110 active:scale-90 ${togglingIds.has(fav.product.id) ? 'opacity-50 cursor-not-allowed' : 'opacity-0 group-hover:opacity-100'}`}
+                                  title="Retirer des favoris"
+                               >
+                                  {togglingIds.has(fav.product.id) ? (
+                                    <Loader2 size={16} className="animate-spin text-terracotta" />
+                                  ) : (
+                                    <Heart size={16} className="fill-red-500" />
+                                  )}
+                               </button>
+                            </div>
+                          ))}
                       </div>
                     )}
                  </div>

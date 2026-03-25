@@ -11,14 +11,27 @@ export interface SupplierStats {
   hasAdvancedStats: boolean;
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export const supplierService = {
   getStats: async () => {
     const res = await api.get<SupplierStats>('/premium/stats');
     return res.data;
   },
 
-  getProducts: async () => {
-    const res = await api.get('/supplier/products');
+  getProducts: async (page?: number, limit?: number): Promise<PaginatedResponse<any>> => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    const res = await api.get(`/supplier/products?${params.toString()}`);
     return res.data;
   },
 
@@ -52,8 +65,11 @@ export const supplierService = {
     return res.data;
   },
 
-  getOrders: async () => {
-    const res = await api.get('/supplier/orders');
+  getOrders: async (page?: number, limit?: number): Promise<PaginatedResponse<any>> => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    const res = await api.get(`/supplier/orders?${params.toString()}`);
     return res.data;
   },
 

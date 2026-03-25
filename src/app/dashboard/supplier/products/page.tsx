@@ -8,13 +8,9 @@ import {
   Trash2, 
   Eye, 
   EyeOff,
-  MoreVertical,
-  ArrowUpDown,
-  Filter,
   Package,
   Loader2,
   AlertCircle,
-  X,
   CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
@@ -25,8 +21,11 @@ import { Button } from '@/components/shared/Button';
 import { Modal } from '@/components/shared/Modal';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { toast } from '@/stores/useToastStore';
+import { usePagination } from '@/hooks/usePagination';
+import { Pagination } from '@/components/shared/Pagination';
 
 export default function SupplierProductsPage() {
+  const { page, onPageChange, handleResponse, meta } = usePagination(10);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,12 +35,14 @@ export default function SupplierProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [page]);
 
   const fetchProducts = async () => {
     try {
-      const data = await supplierService.getProducts();
-      setProducts(data);
+      setLoading(true);
+      const data = await supplierService.getProducts(page, 10);
+      setProducts(data.data);
+      handleResponse(data.meta);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
@@ -152,7 +153,7 @@ export default function SupplierProductsPage() {
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-3xl bg-background border border-border/30 overflow-hidden relative group-hover:shadow-lg transition-all duration-500">
                           {p.imageUrl ? (
-                             <Image src={p.imageUrl} alt={p.name} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                             <Image src={p.imageUrl} alt={p.name} width={64} height={64} className="object-cover group-hover:scale-110 transition-transform duration-700" />
                           ) : (
                              <span className="absolute inset-0 flex items-center justify-center text-2xl">🧶</span>
                           )}
@@ -212,6 +213,15 @@ export default function SupplierProductsPage() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="p-8 border-t border-border/10">
+          <Pagination 
+            currentPage={page}
+            totalPages={meta.totalPages}
+            onPageChange={onPageChange}
+          />
         </div>
       </div>
 

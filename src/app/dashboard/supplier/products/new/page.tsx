@@ -135,8 +135,10 @@ export default function ProductFormPage() {
 
   const addTag = (type: 'colors' | 'sizes', value: string) => {
     if (!value) return;
-    if (formData[type].includes(value)) return;
-    setFormData({ ...formData, [type]: [...formData[type], value] });
+    const cleanedValue = value.trim().toLowerCase();
+    if (!cleanedValue) return;
+    if (formData[type].includes(cleanedValue)) return;
+    setFormData({ ...formData, [type]: [...formData[type], cleanedValue] });
     if (type === 'colors') setNewColor('');
     else setNewSize('');
   };
@@ -148,12 +150,20 @@ export default function ProductFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
+    // Final data cleaning before submission
+    const cleanedFormData = {
+      ...formData,
+      colors: formData.colors.map(c => c.trim().toLowerCase()),
+      sizes: formData.sizes.map(s => s.trim().toLowerCase())
+    };
+
     try {
       if (isEdit) {
-        await supplierService.updateProduct(id!, formData);
+        await supplierService.updateProduct(id!, cleanedFormData);
         toast.success('Produit mis à jour avec succès !');
       } else {
-        await supplierService.createProduct(formData);
+        await supplierService.createProduct(cleanedFormData);
         toast.success('Produit créé avec succès !');
       }
       router.push('/dashboard/supplier/products');

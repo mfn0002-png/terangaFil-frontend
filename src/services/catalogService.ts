@@ -43,31 +43,46 @@ export interface Supplier {
   shipping?: ShippingRate[];
 }
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface ProductFilters {
   supplierId?: number;
   category?: string;
   minPrice?: number;
   maxPrice?: number;
   featured?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export const catalogService = {
-  async getProducts(filters: ProductFilters = {}): Promise<Product[]> {
+  async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams();
     if (filters.supplierId) params.append('supplierId', filters.supplierId.toString());
     if (filters.category && filters.category !== 'Toutes') params.append('category', filters.category);
     if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
     if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
-    
-    // Note: 'featured' filtering is currently client-side or implicit by sorting on backend, 
-    // but we can pass it if we add a dedicated endpoint flag later.
+    if (filters.page) params.append('page', filters.page.toString());
+    if (filters.limit) params.append('limit', filters.limit.toString());
     
     const response = await api.get(`/catalog/products?${params.toString()}`);
     return response.data;
   },
 
-  async getSuppliers(): Promise<Supplier[]> {
-    const response = await api.get('/catalog/suppliers');
+  async getSuppliers(page?: number, limit?: number): Promise<PaginatedResponse<Supplier>> {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    
+    const response = await api.get(`/catalog/suppliers?${params.toString()}`);
     return response.data;
   },
 
