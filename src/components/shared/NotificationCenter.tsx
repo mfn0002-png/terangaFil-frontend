@@ -8,6 +8,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import { useToastStore } from '@/stores/useToastStore';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface NotificationCenterProps {
   dark?: boolean;
@@ -21,45 +22,15 @@ export default function NotificationCenter({ dark = false }: NotificationCenterP
 
   const { token, user } = useAuthStore();
   const { addToast } = useToastStore();
-  const wsRef = useRef<WebSocket | null>(null);
+  
+  // Utiliser le hook unifié pour les notifications en temps réel
+  useNotifications((newNotification) => {
+    setNotifications(prev => [newNotification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  });
 
   useEffect(() => {
     fetchNotifications();
-
-    // Connexion WebSocket
-    if (token) {
-      const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3000/ws';
-      const ws = new WebSocket(`${wsUrl}?token=${token}`);
-
-      ws.onopen = () => console.log('🔌 [WS] Connecté au serveur de notifications');
-      
-      ws.onmessage = (event) => {
-        try {
-          const newNotification = JSON.parse(event.data);
-          
-          // Ajouter à la liste locale
-          setNotifications(prev => [newNotification, ...prev]);
-          setUnreadCount(prev => prev + 1);
-
-          // Afficher un Toast
-          const toastType = newNotification.type?.toLowerCase() === 'info' ? 'info' : 
-                            newNotification.type?.toLowerCase() === 'success' ? 'success' : 
-                            newNotification.type?.toLowerCase() === 'warning' ? 'warning' : 'error';
-          
-          addToast(newNotification.title, toastType as any);
-
-        } catch (error) {
-          console.error('Error parsing WS message', error);
-        }
-      };
-
-      ws.onclose = () => console.log('🔌 [WS] Déconnecté');
-      wsRef.current = ws;
-
-      return () => {
-        ws.close();
-      };
-    }
   }, [token]);
 
   // Fermeture au clic extérieur

@@ -36,7 +36,7 @@ export default function SupplierDashboardPage() {
           supplierService.getShippingRates()
         ]);
         setStats(statsData);
-        setProducts(productsData.slice(0, 5)); // Just show top 5
+        setProducts(productsData.data ? productsData.data.slice(0, 5) : []); // Just show top 5
         setShippingRates(ratesData || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
