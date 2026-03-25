@@ -18,6 +18,14 @@ export const requestForToken = async () => {
   if (!messaging) return null;
   
   try {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.warn('⚠️ [FCM] Permission de notification non accordée/bloquée.');
+        return null;
+      }
+    }
+
     const currentToken = await getToken(messaging, {
       vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
     });

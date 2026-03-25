@@ -44,9 +44,8 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
       try {
         const data = await catalogService.getProductById(productId);
         if (data.colors && data.colors.length > 0) {
-          const cleanedColors = data.colors.map(c => c.trim().toLowerCase());
-          setProduct({ ...data, colors: cleanedColors });
-          setSelectedColor(cleanedColors[0]);
+          setProduct({ ...data });
+          setSelectedColor(data.colors[0].name);
         } else {
           setProduct(data);
         }
@@ -113,27 +112,7 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
     );
   }
 
-  const colorMap: Record<string, string> = {
-    'blanc': '#FFFFFF',
-    'noir': '#000000',
-    'rouge': '#FF0000',
-    'bleu': '#0000FF',
-    'vert': '#008000',
-    'jaune': '#FFFF00',
-    'rose': '#FFC0CB',
-    'gris': '#808080',
-    'marron': '#8B4513',
-    'orange': '#FFA500',
-    'violet': '#EE82EE',
-    'chocolat': '#7B3F00',
-    'terracotta': '#E2725B',
-    'or': '#FFD700',
-    'feuille': '#3A5A40',
-    'sable': '#E9EDC9',
-    'indigo': '#4B0082'
-  };
 
-  const getColorValue = (color: string) => colorMap[color.trim().toLowerCase()] || color;
 
   // Combine imageUrl and images array, removing duplicates and ensuring imageUrl is first
   const images = Array.from(new Set([product.imageUrl, ...(product.images || [])])).filter(Boolean);
@@ -192,11 +171,27 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
               <span className="text-xs font-black text-terracotta uppercase tracking-[0.2em]">
                 {product.supplier.shopName}
               </span>
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} className={i < 4 ? 'fill-gold text-gold' : 'text-sand'} />
-                ))}
-              </div>
+            <div className="flex items-center gap-1">
+              {(() => {
+                // Note stable dérivée de l'id du produit (entre 3.5 et 5)
+                const rating = 3.5 + (product.id % 4) * 0.5; // 3.5, 4.0, 4.5, ou 5.0
+                return [...Array(5)].map((_, i) => {
+                  const full = i < Math.floor(rating);
+                  const half = !full && i < rating;
+                  return (
+                    <Star
+                      key={i}
+                      size={14}
+                      className={full || half ? 'fill-gold text-gold' : 'text-sand'}
+                      style={half ? { clipPath: 'inset(0 50% 0 0)', fill: 'var(--color-gold)' } : {}}
+                    />
+                  );
+                });
+              })()}
+              <span className="text-[9px] font-bold text-chocolate/30 ml-1">
+                {(3.5 + (product.id % 4) * 0.5).toFixed(1)}
+              </span>
+            </div>
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-chocolate tracking-tighter mb-4 leading-none">{product.name}</h1>
             <p className="text-3xl font-black text-terracotta tracking-tighter">{product.price.toLocaleString()} FCFA</p>
@@ -209,10 +204,11 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
                 <div className="flex gap-3">
                   {product.colors.map((color) => (
                     <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-10 h-10 rounded-full border-4 transition-all ${selectedColor === color ? 'border-terracotta scale-110 shadow-lg' : 'border-sand hover:border-chocolate/20'}`}
-                      style={{ backgroundColor: getColorValue(color) }}
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`w-10 h-10 rounded-full border-4 transition-all ${selectedColor === color.name ? 'border-terracotta scale-110 shadow-lg' : 'border-sand hover:border-chocolate/20'}`}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
                     />
                   ))}
                 </div>

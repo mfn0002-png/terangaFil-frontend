@@ -116,12 +116,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showSupplier 
             {product.price.toLocaleString()} <span className="text-xs font-bold text-chocolate/40">CFA</span>
           </span>
           
-          <button 
-            onClick={handleAddToCart}
+          <div 
             className="w-10 h-10 rounded-xl bg-sand/20 flex items-center justify-center text-chocolate group-hover:bg-terracotta group-hover:text-white transition-all transform active:scale-90"
           >
-          <ArrowRight size={20} />
-          </button>
+            <ArrowRight size={20} />
+          </div>
         </div>
       </div>
     </Link>

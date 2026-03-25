@@ -47,13 +47,14 @@ export default function ProductFormPage() {
     hookSize: '',
     price: 0,
     stock: 0,
-    colors: [] as string[],
+    colors: [] as { name: string; hex: string }[],
     sizes: [] as string[],
     imageUrl: '',
     images: [] as string[],
   });
 
-  const [newColor, setNewColor] = useState('');
+  const [newColorName, setNewColorName] = useState('');
+  const [newColorHex, setNewColorHex] = useState('#000000');
   const [newSize, setNewSize] = useState('');
 
   useEffect(() => {
@@ -133,18 +134,30 @@ export default function ProductFormPage() {
     });
   };
 
-  const addTag = (type: 'colors' | 'sizes', value: string) => {
+  const addSize = (value: string) => {
     if (!value) return;
     const cleanedValue = value.trim().toLowerCase();
     if (!cleanedValue) return;
-    if (formData[type].includes(cleanedValue)) return;
-    setFormData({ ...formData, [type]: [...formData[type], cleanedValue] });
-    if (type === 'colors') setNewColor('');
-    else setNewSize('');
+    if (formData.sizes.includes(cleanedValue)) return;
+    setFormData({ ...formData, sizes: [...formData.sizes, cleanedValue] });
+    setNewSize('');
   };
 
-  const removeTag = (type: 'colors' | 'sizes', value: string) => {
-    setFormData({ ...formData, [type]: formData[type].filter(v => v !== value) });
+  const addColor = () => {
+    if (!newColorName.trim()) return;
+    const cleanedName = newColorName.trim();
+    if (formData.colors.some(c => c.name.toLowerCase() === cleanedName.toLowerCase())) return;
+    setFormData({ ...formData, colors: [...formData.colors, { name: cleanedName, hex: newColorHex }] });
+    setNewColorName('');
+    setNewColorHex('#000000');
+  };
+
+  const removeSize = (value: string) => {
+    setFormData({ ...formData, sizes: formData.sizes.filter(v => v !== value) });
+  };
+
+  const removeColor = (name: string) => {
+    setFormData({ ...formData, colors: formData.colors.filter(c => c.name !== name) });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +167,7 @@ export default function ProductFormPage() {
     // Final data cleaning before submission
     const cleanedFormData = {
       ...formData,
-      colors: formData.colors.map(c => c.trim().toLowerCase()),
+      colors: formData.colors.map(c => ({ name: c.name.trim(), hex: c.hex })),
       sizes: formData.sizes.map(s => s.trim().toLowerCase())
     };
 
@@ -335,25 +348,35 @@ export default function ProductFormPage() {
                  <label className="text-[10px] font-black uppercase tracking-widest text-foreground/40 px-2">Couleurs disponibles</label>
                  <div className="flex flex-wrap gap-3">
                     {formData.colors.map(color => (
-                       <Badge key={color} variant="secondary" className="pl-4 pr-2 py-2">
-                          {color}
-                          <button type="button" onClick={() => removeTag('colors', color)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                       <Badge key={color.name} variant="secondary" className="pl-4 pr-2 py-2 flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full border border-border/50" style={{ backgroundColor: color.hex }} />
+                          {color.name}
+                          <button type="button" onClick={() => removeColor(color.name)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                              <X size={12} />
                           </button>
                        </Badge>
                     ))}
-                    <div className="relative group">
+                    <div className="flex items-center gap-2">
                        <input 
-                          type="text" 
-                          placeholder="Ajouter une couleur..."
-                          value={newColor}
-                          onChange={(e) => setNewColor(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('colors', newColor))}
-                          className="bg-border/20 border-2 border-dashed border-border/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-primary w-48"
+                          type="color" 
+                          value={newColorHex}
+                          onChange={(e) => setNewColorHex(e.target.value)}
+                          className="w-8 h-8 rounded-full border-none cursor-pointer bg-transparent"
+                          title="Choisir une couleur"
                        />
-                       <button type="button" onClick={() => addTag('colors', newColor)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
-                          <Plus size={14} />
-                       </button>
+                       <div className="relative group">
+                          <input 
+                             type="text" 
+                             placeholder="Nom de couleur..."
+                             value={newColorName}
+                             onChange={(e) => setNewColorName(e.target.value)}
+                             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addColor())}
+                             className="bg-border/20 border-2 border-dashed border-border/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-primary w-48"
+                          />
+                          <button type="button" onClick={addColor} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
+                             <Plus size={14} />
+                          </button>
+                       </div>
                     </div>
                  </div>
               </div>
@@ -364,7 +387,7 @@ export default function ProductFormPage() {
                     {formData.sizes.map(size => (
                        <Badge key={size} variant="primary" className="pl-4 pr-2 py-2">
                           {size}
-                          <button type="button" onClick={() => removeTag('sizes', size)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
+                          <button type="button" onClick={() => removeSize(size)} className="p-1 hover:bg-white/20 rounded-full transition-colors">
                              <X size={12} />
                           </button>
                        </Badge>
@@ -375,10 +398,10 @@ export default function ProductFormPage() {
                           placeholder="Ex: Mètre, S, 6 yards..."
                           value={newSize}
                           onChange={(e) => setNewSize(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag('sizes', newSize))}
+                          onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSize(newSize))}
                           className="bg-border/20 border-2 border-dashed border-border/60 rounded-full py-2 px-6 text-[10px] font-bold outline-none focus:border-primary w-48"
                        />
-                       <button type="button" onClick={() => addTag('sizes', newSize)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
+                       <button type="button" onClick={() => addSize(newSize)} className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-primary">
                           <Plus size={14} />
                        </button>
                     </div>

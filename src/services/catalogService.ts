@@ -13,7 +13,7 @@ export interface Product {
   weight?: string;
   length?: string;
   usage?: string;
-  colors: string[];
+  colors: { name: string; hex: string }[];
   sizes?: string[]; // Tailles disponibles (ex: ["S", "M", "L", "XL"] ou ["10m", "20m"])
   isSpotlight: boolean;
   supplier: {
