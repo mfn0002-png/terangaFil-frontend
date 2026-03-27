@@ -63,6 +63,26 @@ export interface ProductFilters {
   limit?: number;
 }
 
+export interface Review {
+  id: number;
+  userId: number;
+  productId: number;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  user: { name: string; avatarUrl?: string };
+}
+
+export interface ReviewStats {
+  total: number;
+  average: number;
+}
+
+export interface ProductReviewsResponse {
+  reviews: Review[];
+  stats: ReviewStats;
+}
+
 export const catalogService = {
   async getProducts(filters: ProductFilters = {}): Promise<PaginatedResponse<Product>> {
     const params = new URLSearchParams();
@@ -94,5 +114,16 @@ export const catalogService = {
   async getProductById(id: number | string): Promise<Product> {
     const response = await api.get(`/catalog/products/${id}`);
     return response.data;
-  }
+  },
+
+  async getProductReviews(productId: number | string): Promise<ProductReviewsResponse> {
+    const response = await api.get(`/catalog/products/${productId}/reviews`);
+    return response.data;
+  },
+
+  async submitReview(data: { productId: number; rating: number; comment?: string }): Promise<Review> {
+    const response = await api.post('/reviews', data);
+    return response.data;
+  },
 };
+

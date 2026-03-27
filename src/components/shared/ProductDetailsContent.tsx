@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   ShoppingCart, 
   Heart, 
@@ -13,18 +14,23 @@ import {
   ShieldCheck, 
   ArrowLeft,
   Loader2,
-  Check
+  Check,
+  MessageSquare,
+  Send
 } from 'lucide-react';
-import { catalogService, Product } from '@/services/catalogService';
+import { catalogService, Product, Review, ReviewStats } from '@/services/catalogService';
 import { useCartStore } from '@/stores/cartStore';
 import { toast } from '@/stores/useToastStore';
 import { useFavoriteStore } from '@/stores/favoriteStore';
+import { useAuthStore } from '@/stores/authStore';
+
 
 interface ProductDetailsContentProps {
   productId: number;
 }
 
 export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps) => {
+  const router = useRouter();
   const { addItem, items: cartItems } = useCartStore();
   const { toggleFavorite, favoriteIds, fetchFavorites, initialized, togglingIds } = useFavoriteStore();
   const isFavorite = favoriteIds.has(productId);
@@ -37,6 +43,15 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
+  
+  // Reviews state
+  const { user } = useAuthStore();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<ReviewStats>({ total: 0, average: 0 });
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -50,6 +65,9 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
           setProduct(data);
         }
         if (data.sizes && data.sizes.length > 0) setSelectedSize(data.sizes[0]);
+        
+        // Fetch reviews
+        fetchReviews();
         
         // Fetch similar products
         const response = await catalogService.getProducts({ 
@@ -70,8 +88,57 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
     }
   }, [productId, initialized, fetchFavorites]);
 
+  const fetchReviews = async () => {
+    setLoadingReviews(true);
+    try {
+      const response = await catalogService.getProductReviews(productId);
+      setReviews(response.reviews);
+      setReviewStats(response.stats);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error('Vous devez être connecté pour laisser un avis');
+      return;
+    }
+    if (reviewRating < 1 || reviewRating > 5) {
+      toast.error('La note doit être entre 1 et 5');
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      await catalogService.submitReview({
+        productId,
+        rating: reviewRating,
+        comment: reviewComment
+      });
+      toast.success('Merci pour votre avis !');
+      setReviewComment('');
+      setReviewRating(5);
+      fetchReviews(); // Recharger les avis
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Erreur lors de l'envoi de l'avis";
+      toast.error(message);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   const handleAddToCart = async () => {
     if (!product) return;
+    
+    if (isInCart) {
+      router.push('/cart');
+      return;
+    }
+
     setIsAdding(true);
     try {
       addItem({
@@ -112,11 +179,7 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
     );
   }
 
-
-
-  // Combine imageUrl and images array, removing duplicates and ensuring imageUrl is first
   const images = Array.from(new Set([product.imageUrl, ...(product.images || [])])).filter(Boolean);
-
   const isInCart = cartItems.some(item => item.id === product.id);
 
   return (
@@ -171,27 +234,36 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
               <span className="text-xs font-black text-terracotta uppercase tracking-[0.2em]">
                 {product.supplier.shopName}
               </span>
-            <div className="flex items-center gap-1">
-              {(() => {
-                // Note stable dérivée de l'id du produit (entre 3.5 et 5)
-                const rating = 3.5 + (product.id % 4) * 0.5; // 3.5, 4.0, 4.5, ou 5.0
-                return [...Array(5)].map((_, i) => {
-                  const full = i < Math.floor(rating);
-                  const half = !full && i < rating;
-                  return (
-                    <Star
-                      key={i}
-                      size={14}
-                      className={full || half ? 'fill-gold text-gold' : 'text-sand'}
-                      style={half ? { clipPath: 'inset(0 50% 0 0)', fill: 'var(--color-gold)' } : {}}
-                    />
-                  );
-                });
-              })()}
-              <span className="text-[9px] font-bold text-chocolate/30 ml-1">
-                {(3.5 + (product.id % 4) * 0.5).toFixed(1)}
-              </span>
-            </div>
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const rating = reviewStats.total > 0 ? reviewStats.average : 0;
+                  return [...Array(5)].map((_, i) => {
+                    const full = i < Math.floor(rating);
+                    const half = !full && i < Math.ceil(rating) && rating % 1 !== 0;
+                    return (
+                      <Star
+                        key={i}
+                        size={14}
+                        className={full ? 'fill-gold text-gold' : half ? 'text-gold' : 'text-sand'}
+                        style={half ? { 
+                          fill: 'url(#half-star-gradient)',
+                        } : {}}
+                      />
+                    );
+                  });
+                })()}
+                <svg width="0" height="0" className="absolute">
+                  <defs>
+                    <linearGradient id="half-star-gradient">
+                      <stop offset="50%" stopColor="var(--color-gold)" />
+                      <stop offset="50%" stopColor="var(--color-sand)" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="text-[9px] font-bold text-chocolate/40 ml-1">
+                  {reviewStats.total > 0 ? `${reviewStats.average.toFixed(1)} (${reviewStats.total} avis)` : 'Aucun avis'}
+                </span>
+              </div>
             </div>
             <h1 className="text-3xl md:text-5xl font-black text-chocolate tracking-tighter mb-4 leading-none">{product.name}</h1>
             <p className="text-3xl font-black text-terracotta tracking-tighter">{product.price.toLocaleString()} FCFA</p>
@@ -202,9 +274,10 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
               <div className="space-y-4">
                 <span className="text-[10px] font-black text-chocolate/30 uppercase tracking-[0.2em] italic">Couleurs disponibles</span>
                 <div className="flex gap-3">
-                  {product.colors.map((color) => (
+                  {/* Dédoublonnage des couleurs par nom et hex pour éviter l'erreur de clé React */}
+                  {Array.from(new Map(product.colors.map(c => [`${c.name}-${c.hex}`, c])).values()).map((color) => (
                     <button
-                      key={color.name}
+                      key={`${color.name}-${color.hex}`}
                       onClick={() => setSelectedColor(color.name)}
                       className={`w-10 h-10 rounded-full border-4 transition-all ${selectedColor === color.name ? 'border-terracotta scale-110 shadow-lg' : 'border-sand hover:border-chocolate/20'}`}
                       style={{ backgroundColor: color.hex }}
@@ -289,6 +362,133 @@ export const ProductDetailsContent = ({ productId }: ProductDetailsContentProps)
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-12 border-t border-sand">
+        <div className="lg:col-span-1 space-y-6">
+          <div className="flex items-center gap-3">
+            <MessageSquare className="text-terracotta" size={24} />
+            <h3 className="text-2xl font-black text-chocolate uppercase tracking-tighter italic">Avis Clients</h3>
+          </div>
+          
+          <div className="bg-sand/10 rounded-[40px] p-8 border border-sand">
+            <div className="text-center space-y-2">
+              <p className="text-5xl font-black text-chocolate">{reviewStats.average.toFixed(1)}</p>
+              <div className="flex justify-center gap-1 py-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star 
+                    key={i} 
+                    size={20} 
+                    className={i < Math.round(reviewStats.average) ? 'fill-gold text-gold' : 'text-sand'} 
+                  />
+                ))}
+              </div>
+              <p className="text-xs font-bold text-chocolate/40 uppercase tracking-widest">{reviewStats.total} avis enregistrés</p>
+            </div>
+          </div>
+
+          {user ? (
+            <div className="bg-white rounded-[35px] p-6 border border-sand shadow-xl shadow-chocolate/5 space-y-4">
+              <h4 className="font-black text-chocolate text-sm uppercase tracking-widest italic">Laisser un avis</h4>
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setReviewRating(s)}
+                      className="transition-transform active:scale-90"
+                    >
+                      <Star 
+                        size={24} 
+                        className={s <= reviewRating ? 'fill-gold text-gold' : 'text-sand/50'} 
+                      />
+                    </button>
+                  ))}
+                </div>
+                <div className="relative">
+                  <textarea
+                    value={reviewComment}
+                    onChange={(e) => setReviewComment(e.target.value)}
+                    placeholder="Qu'avez-vous pensé de ce produit ?"
+                    className="w-full h-32 bg-sand/20 rounded-2xl p-4 text-sm font-medium text-chocolate placeholder:text-chocolate/30 border border-transparent focus:border-terracotta focus:bg-white transition-all outline-none resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmittingReview}
+                  className="w-full bg-chocolate text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-terracotta transition-all disabled:opacity-50"
+                >
+                  {isSubmittingReview ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  Envoyer l'avis
+                </button>
+              </form>
+            </div>
+          ) : (
+            <div className="bg-sand/5 rounded-[30px] p-6 border border-dashed border-sand text-center space-y-3">
+              <p className="text-xs font-bold text-chocolate/50 italic">Connectez-vous pour partager votre expérience</p>
+              <Link 
+                href="/auth/login" 
+                className="inline-block px-6 py-2 bg-chocolate text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-terracotta transition-all"
+              >
+                Se connecter
+              </Link>
+            </div>
+          )}
+        </div>
+
+        <div className="lg:col-span-2 space-y-8">
+          {loadingReviews ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="animate-spin text-terracotta" size={32} />
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-4 bg-sand/5 rounded-[45px] border border-dashed border-sand">
+              <MessageSquare size={48} className="text-chocolate/10" />
+              <p className="font-bold text-chocolate/30 italic">Aucun avis pour l'instant. Soyez le premier à donner le vôtre !</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {reviews.map((review) => (
+                <div key={review.id} className="bg-white p-8 rounded-[40px] border border-sand shadow-lg shadow-chocolate/5 space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-sand/30 border-2 border-white shadow-md relative">
+                        <Image 
+                          src={review.user.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user.name)}&background=E2725B&color=fff`}
+                          alt={review.user.name}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <p className="font-black text-chocolate text-sm tracking-tight">{review.user.name}</p>
+                        <p className="text-[10px] font-bold text-chocolate/30 uppercase tracking-widest">
+                          {new Date(review.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          size={12} 
+                          className={i < review.rating ? 'fill-gold text-gold' : 'text-sand'} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="text-sm font-medium text-chocolate/70 leading-relaxed italic">
+                      "{review.comment}"
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

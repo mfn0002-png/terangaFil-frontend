@@ -12,16 +12,37 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cartStore';
+import { useAuthStore } from '@/stores/authStore';
 import api from '@/lib/api';
 import { toast } from '@/stores/useToastStore';
+import { useEffect } from 'react';
+import { PaymentSandboxModal } from '@/components/shared/PaymentSandboxModal';
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { items, getItemsBySupplier, getTotalPrice, checkoutInfo, setCheckoutInfo, clearCart } = useCartStore();
   const groupedItems = getItemsBySupplier();
   
   const [activePayment, setActivePayment] = useState<'WAVE' | 'OM' | 'CARD'>('WAVE');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Sandbox Modal State
+  const [isSandboxModalOpen, setIsSandboxModalOpen] = useState(false);
+  const [sandboxData, setSandboxData] = useState<{ token: string; orderId: string; amount: number } | null>(null);
+
+  // Pre-fill user info
+  useEffect(() => {
+    if (user) {
+      const names = user.name.split(' ');
+      const firstName = names[0] || '';
+      const lastName = names.slice(1).join(' ') || '';
+      
+      if (!checkoutInfo.firstName && firstName) setCheckoutInfo({ firstName });
+      if (!checkoutInfo.lastName && lastName) setCheckoutInfo({ lastName });
+      if (!checkoutInfo.phoneNumber && user.phoneNumber) setCheckoutInfo({ phoneNumber: user.phoneNumber.replace('+221', '').trim() });
+    }
+  }, [user]);
 
   // Calcul des frais de port réels basés sur les zones uniques par fournisseur
   const calculateShippingForSupplier = (supplierItems: any[]) => {
@@ -91,16 +112,26 @@ export default function CheckoutPage() {
         customerPhone: checkoutInfo.phoneNumber,
       });
 
-      // 3. Rediriger vers la page de paiement PayDunya
+      // 3. Gérer la redirection ou la modal sandbox
       if (paymentResponse.data.paymentUrl) {
         // Sauvegarder l'ID de commande pour la page de retour
         localStorage.setItem('pendingOrderId', orderId.toString());
         
-        // Vider le panier avant la redirection
+        // Vider le panier
         clearCart();
         
-        // Rediriger vers PayDunya
-        window.location.href = paymentResponse.data.paymentUrl;
+        // Si c'est une URL sandbox, afficher la modal au lieu de rediriger
+        if (paymentResponse.data.paymentUrl.includes('sandbox')) {
+          setSandboxData({
+            token: paymentResponse.data.token,
+            orderId: orderId.toString(),
+            amount: grandTotal
+          });
+          setIsSandboxModalOpen(true);
+        } else {
+          // Rediriger vers PayDunya réel
+          window.location.href = paymentResponse.data.paymentUrl;
+        }
       } else {
         throw new Error('URL de paiement non reçue');
       }
@@ -290,6 +321,25 @@ export default function CheckoutPage() {
           </aside>
         </div>
       </div>
+
+      {/* Sandbox Modal */}
+      {sandboxData && (
+        <PaymentSandboxModal
+          isOpen={isSandboxModalOpen}
+          onClose={() => setIsSandboxModalOpen(false)}
+          token={sandboxData.token}
+          orderId={sandboxData.orderId}
+          amount={sandboxData.amount}
+          onSuccess={() => {
+            setIsSandboxModalOpen(false);
+            router.push(`/checkout/success?orderId=${sandboxData.orderId}`);
+          }}
+          onCancel={() => {
+            setIsSandboxModalOpen(false);
+            router.push('/checkout/cancel');
+          }}
+        />
+      )}
     </div>
   );
 }

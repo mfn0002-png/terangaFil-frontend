@@ -7,20 +7,21 @@ export interface Toast {
   message: string;
   type: ToastType;
   duration?: number;
+  isNotification?: boolean;
 }
 
 interface ToastStore {
   toasts: Toast[];
-  addToast: (message: string, type: ToastType, duration?: number) => void;
+  addToast: (message: string, type: ToastType, duration?: number, isNotification?: boolean) => void;
   removeToast: (id: string) => void;
 }
 
 export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
-  addToast: (message, type, duration = 5000) => {
+  addToast: (message, type, duration = 5000, isNotification = false) => {
     const id = Math.random().toString(36).substring(2, 9);
     set((state) => ({
-      toasts: [...state.toasts, { id, message, type, duration }],
+      toasts: [...state.toasts, { id, message, type, duration, isNotification }],
     }));
 
     if (duration !== Infinity) {
@@ -38,8 +39,8 @@ export const useToastStore = create<ToastStore>((set) => ({
 }));
 
 export const toast = {
-  success: (msg: string, dur?: number) => useToastStore.getState().addToast(msg, 'success', dur),
-  error: (msg: string, dur?: number) => useToastStore.getState().addToast(msg, 'error', dur),
-  info: (msg: string, dur?: number) => useToastStore.getState().addToast(msg, 'info', dur),
-  warning: (msg: string, dur?: number) => useToastStore.getState().addToast(msg, 'warning', dur),
+  success: (msg: string, dur?: number, isNotif?: boolean) => useToastStore.getState().addToast(msg, 'success', dur, isNotif),
+  error: (msg: string, dur?: number, isNotif?: boolean) => useToastStore.getState().addToast(msg, 'error', dur, isNotif),
+  info: (msg: string, dur?: number, isNotif?: boolean) => useToastStore.getState().addToast(msg, 'info', dur, isNotif),
+  warning: (msg: string, dur?: number, isNotif?: boolean) => useToastStore.getState().addToast(msg, 'warning', dur, isNotif),
 };

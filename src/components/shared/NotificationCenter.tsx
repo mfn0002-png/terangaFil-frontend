@@ -6,9 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import api from '@/lib/api';
-import { useAuthStore } from '@/stores/authStore';
-import { useToastStore } from '@/stores/useToastStore';
-import { useNotifications } from '@/hooks/useNotifications';
+import { useNotificationStore } from '@/stores/useNotificationStore'; // ← store
 
 interface NotificationCenterProps {
   dark?: boolean;
@@ -20,20 +18,22 @@ export default function NotificationCenter({ dark = false }: NotificationCenterP
   const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { token, user } = useAuthStore();
-  const { addToast } = useToastStore();
-  
-  // Utiliser le hook unifié pour les notifications en temps réel
-  useNotifications((newNotification) => {
-    setNotifications(prev => [newNotification, ...prev]);
-    setUnreadCount(prev => prev + 1);
-  });
+  // ← Écoute le store au lieu de useNotifications()
+  const { liveNotifications } = useNotificationStore();
 
+  // Nouvelle notification reçue en temps réel
+  useEffect(() => {
+    if (liveNotifications.length === 0) return;
+    const latest = liveNotifications[0];
+    setNotifications(prev => [latest, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  }, [liveNotifications]);
+
+  // Chargement initial depuis l'API
   useEffect(() => {
     fetchNotifications();
-  }, [token]);
+  }, []);
 
-  // Fermeture au clic extérieur
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -63,7 +63,7 @@ export default function NotificationCenter({ dark = false }: NotificationCenterP
       await api.patch(`/notifications/${id}/read`);
       fetchNotifications();
     } catch (error) {
-       console.error('Failed to mark as read');
+      console.error('Failed to mark as read');
     }
   };
 
@@ -72,7 +72,7 @@ export default function NotificationCenter({ dark = false }: NotificationCenterP
       await api.post('/notifications/read-all');
       fetchNotifications();
     } catch (error) {
-       console.error('Failed to mark all as read');
+      console.error('Failed to mark all as read');
     }
   };
 

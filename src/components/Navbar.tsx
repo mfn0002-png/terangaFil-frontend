@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
 import NotificationCenter from './shared/NotificationCenter';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -28,10 +30,10 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden lg:flex items-center gap-8 text-[11px] font-bold uppercase tracking-widest text-chocolate/50">
-            <Link href="/public/catalog" className="hover:text-terracotta transition-colors">Boutique</Link>
-            <Link href="/public/suppliers" className="hover:text-terracotta transition-colors">Vendeurs</Link>
-            <Link href="/models" className="hover:text-terracotta transition-colors">Modèles</Link>
-            <Link href="/community" className="hover:text-terracotta transition-colors">Communauté</Link>
+            <Link href="/public/catalog" className={`transition-colors ${pathname === '/public/catalog' ? 'text-terracotta' : 'hover:text-terracotta'}`}>Boutique</Link>
+            <Link href="/public/suppliers" className={`transition-colors ${pathname === '/public/suppliers' ? 'text-terracotta' : 'hover:text-terracotta'}`}>Vendeurs</Link>
+            <Link href="/models" className={`transition-colors ${pathname === '/models' ? 'text-terracotta' : 'hover:text-terracotta'}`}>Modèles</Link>
+            <Link href="/community" className={`transition-colors ${pathname === '/community' ? 'text-terracotta' : 'hover:text-terracotta'}`}>Communauté</Link>
           </div>
 
           <div className="hidden md:flex flex-1 max-w-lg relative group">

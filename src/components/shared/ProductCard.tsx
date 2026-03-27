@@ -7,6 +7,7 @@ import { ShoppingCart, Heart, ChevronRight, ArrowRight, Loader2 } from 'lucide-r
 import { useCartStore } from '@/stores/cartStore';
 import { useFavoriteStore } from '@/stores/favoriteStore';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Product } from '@/services/catalogService';
 
 interface ProductCardProps {
@@ -15,6 +16,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ product, showSupplier = true }) => {
+  const router = useRouter();
   const { addItem, items: cartItems } = useCartStore();
   const { toggleFavorite, favoriteIds, fetchFavorites, initialized, togglingIds } = useFavoriteStore();
   const isFavorite = favoriteIds.has(product.id);
@@ -33,6 +35,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showSupplier 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (cartQuantity > 0) {
+      router.push('/cart');
+      return;
+    }
+
     addItem({
       id: product.id,
       name: product.name,

@@ -5,6 +5,7 @@ import Providers from "@/components/Providers";
 import ThemeManager from "@/components/ThemeManager";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import LayoutWrapper from "@/components/LayoutWrapper";
+import { WSProvider } from "@/components/WSProvider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -25,6 +26,7 @@ export default function RootLayout({
         <Providers>
           <ThemeManager />
           <LayoutWrapper>
+            <WSProvider />
             {children}
           </LayoutWrapper>
           <ThemeSwitcher />
